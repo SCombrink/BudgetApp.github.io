@@ -379,7 +379,6 @@
                     <th>Description</th>
                     <th class="num-col planner-hide-mobile">Income</th>
                     <th class="num-col planner-hide-mobile">Expense</th>
-                    <th class="num-col planner-show-mobile">Value</th>
                     <th class="planner-hide-mobile">Type</th>
                     <th style="width: 60px; text-align:center;" class="planner-hide-mobile"></th>
                     <th class="num-col">Balance</th>
@@ -2168,9 +2167,11 @@
                 <td style="font-weight:bold; color:#1f2937; padding:8px 10px;">${monthName}</td>
                 <td class="num-col planner-hide-mobile" style="font-weight:bold; color:#1f2937;">${monthInc === 0 ? '' : formatMoney(monthInc)}</td>
                 <td class="num-col planner-hide-mobile" style="font-weight:bold; color:#1f2937;">${monthExp === 0 ? '' : formatMoney(monthExp)}</td>
-                <td class="num-col planner-show-mobile" style="font-weight:bold; color:#1f2937;">${formatMoney(monthInc - monthExp)}</td>
                 <td colspan="2" class="planner-hide-mobile" style="text-align: right; font-size: 0.85rem; color: #4b5563; font-weight: 600; white-space: nowrap; padding-right: 15px;">${isCollapsed ? '▼ Expand' : '▲ Collapse'}</td>
-                <td class="num-col" style="font-weight:bold; color:#1f2937;">${formatBalance(endBalanceForHeader)}</td>
+                <td class="num-col" style="font-weight:bold; color:#1f2937;">
+                    <span class="planner-hide-mobile">${formatBalance(endBalanceForHeader)}</span>
+                    <span class="planner-show-mobile">${formatMoney(monthInc - monthExp)}</span>
+                </td>
             </tr>`;
 
             if (!isCollapsed) {
@@ -2180,7 +2181,6 @@
                     <td style="color:#6b7280; font-style:italic;">Opening Balance</td>
                     <td class="num-col planner-hide-mobile" style="color:#6b7280;"></td>
                     <td class="num-col planner-hide-mobile" style="color:#6b7280;"></td>
-                    <td class="num-col planner-show-mobile" style="color:#6b7280;"></td>
                     <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
                     <td class="planner-hide-mobile"></td>
                     <td class="num-col" style="color:#6b7280;">${formatBalance(balance)}</td>
@@ -2192,7 +2192,6 @@
                     <td style="color:#6b7280; font-style:italic;">Budget Float (Auto)</td>
                     <td class="num-col planner-hide-mobile" style="color:#6b7280;">${marginInc === 0 ? '' : formatMoney(marginInc)}</td>
                     <td class="num-col planner-hide-mobile" style="color:#6b7280;">${marginExp === 0 ? '' : formatMoney(marginExp)}</td>
-                    <td class="num-col planner-show-mobile" style="color:#6b7280;">${formatMoney(margin)}</td>
                     <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
                     <td class="planner-hide-mobile"></td>
                     <td class="num-col" style="color:#6b7280;">
@@ -2207,7 +2206,6 @@
                     <td style="color:#6b7280; font-style:italic; cursor:pointer;">Savings (Auto) <span style="color:#9ca3af; font-size:0.85rem;">⚙</span></td>
                     <td class="num-col planner-hide-mobile" style="color:#6b7280;">${savings === 0 ? '' : formatMoney(savings)}</td>
                     <td class="num-col planner-hide-mobile" style="color:#6b7280;"></td>
-                    <td class="num-col planner-show-mobile" style="color:#6b7280;">${formatMoney(savings)}</td>
                     <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
                     <td class="planner-hide-mobile"></td>
                     <td class="num-col" style="color:#6b7280;">
@@ -2228,7 +2226,6 @@
                             
                             <td class="num-col planner-hide-mobile"><input type="${inputType}" inputmode="text" id="pe-inc" style="width:100%; padding:6px; box-sizing:border-box; text-align:right;" value="${formatInputNumber(p.inc)}" placeholder="0" onfocus="handleNumberFocus(this, ${p.inc})" oninput="updatePlannerBalance()" onblur="acceptPlannerEdit(event)" onkeydown="if(event.key==='Enter' || event.key==='Escape') acceptPlannerEdit(event)"></td>
                             <td class="num-col planner-hide-mobile"><input type="${inputType}" inputmode="text" id="pe-exp" style="width:100%; padding:6px; box-sizing:border-box; text-align:right;" value="${formatInputNumber(p.exp)}" placeholder="0" onfocus="handleNumberFocus(this, ${p.exp})" oninput="updatePlannerBalance()" onblur="acceptPlannerEdit(event)" onkeydown="if(event.key==='Enter' || event.key==='Escape') acceptPlannerEdit(event)"></td>
-                            <td class="num-col planner-show-mobile"><input type="${inputType}" inputmode="text" id="pe-val" style="width:100%; padding:6px; box-sizing:border-box; text-align:right;" value="${formatInputNumber(pNet)}" placeholder="0" onfocus="handleNumberFocus(this, ${pNet})" oninput="updatePlannerBalance()" onblur="acceptPlannerEdit(event)" onkeydown="if(event.key==='Enter' || event.key==='Escape') acceptPlannerEdit(event)"></td>
 
                             <td class="planner-hide-mobile">
                                 <select id="pe-type" style="padding:6px; width:100%; box-sizing:border-box; font-size:0.9rem;">
@@ -2241,7 +2238,12 @@
                                 <button class="danger" style="border-radius: 12px; padding: 4px 12px; font-size: 0.8rem; height: auto; width: auto;" onclick="removePlanner('${p.id}', event)">DELETE</button>
                             </td>
                             
-                            <td class="num-col" id="pe-balance" style="font-weight:bold; color:#1f2937;">${formatBalance(balance)}</td>
+                            <td class="num-col" style="font-weight:bold; color:#1f2937;">
+                                <span class="planner-hide-mobile" id="pe-balance">${formatBalance(balance)}</span>
+                                <span class="planner-show-mobile">
+                                    <input type="${inputType}" inputmode="text" id="pe-val" style="width:100%; padding:6px; box-sizing:border-box; text-align:right;" value="${formatInputNumber(pNet)}" placeholder="0" onfocus="handleNumberFocus(this, ${pNet})" oninput="updatePlannerBalance()" onblur="acceptPlannerEdit(event)" onkeydown="if(event.key==='Enter' || event.key==='Escape') acceptPlannerEdit(event)">
+                                </span>
+                            </td>
                         </tr>`;
                     } else {
                         let dispDesc = p.desc || `<span style="color:#9ca3af;font-style:italic;">Add Description</span>`;
@@ -2253,7 +2255,6 @@
                             <td>${dispDesc}</td>
                             <td class="num-col planner-hide-mobile">${p.inc === 0 ? '' : formatMoney(p.inc)}</td>
                             <td class="num-col planner-hide-mobile">${p.exp === 0 ? '' : formatMoney(p.exp)}</td>
-                            <td class="num-col planner-show-mobile">${formatMoney(pNet)}</td>
                             <td class="planner-hide-mobile"><span style="background-color:${tagBg}; color:${tagColor}; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">${p.type}</span></td>
                             <td style="text-align:center;" class="planner-hide-mobile"></td>
                             <td class="num-col">
@@ -2274,7 +2275,6 @@
                     <td style="color:${discColor}; font-style:italic;">${discName} (Auto)</td>
                     <td class="num-col planner-hide-mobile" style="color:${discColor};">${discVar >= 0 && discVar !== 0 ? formatMoney(discVar) : ''}</td>
                     <td class="num-col planner-hide-mobile" style="color:${discColor};">${discVar < 0 ? formatMoney(Math.abs(discVar)) : ''}</td>
-                    <td class="num-col planner-show-mobile" style="color:${discColor};">${formatMoney(discVar)}</td>
                     <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
                     <td class="planner-hide-mobile"></td>
                     <td class="num-col" style="${balFormat}">
@@ -2290,7 +2290,6 @@
                     </td>
                     <td class="num-col planner-hide-mobile" style="border-top: 2px solid #1f2937;"></td>
                     <td class="num-col planner-hide-mobile" style="border-top: 2px solid #1f2937;"></td>
-                    <td class="num-col planner-show-mobile" style="border-top: 2px solid #1f2937;"></td>
                     <td colspan="2" class="planner-hide-mobile" style="border-top: 2px solid #1f2937; font-weight:bold; text-align:right; padding: 8px 15px 8px 10px;">Closing Balance</td>
                     <td class="num-col" style="border-top: 2px solid #1f2937; font-weight:bold; font-size:1.1rem; color:#1f2937;">${formatBalance(balance)}</td>
                 </tr>`;
@@ -2304,7 +2303,6 @@
                     </td>
                     <td class="num-col planner-hide-mobile" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
                     <td class="num-col planner-hide-mobile" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
-                    <td class="num-col planner-show-mobile" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
                     <td colspan="2" class="planner-hide-mobile" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
                     <td class="num-col" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
                 </tr>`;
