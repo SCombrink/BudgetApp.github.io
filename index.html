@@ -716,19 +716,23 @@
             }
         } else {
             for (let month in newState.budgets) {
-                newState.budgets[month].forEach(sec => {
-                    sec.items.forEach(item => {
-                        if(item.detail === undefined) item.detail = "";
-                        if(item.day === undefined) item.day = null;
-                        if(item.locked === undefined) item.locked = false;
-                        if(item.linkedItems === undefined) item.linkedItems = [];
-                        if(item.isSaving === undefined) item.isSaving = item.n && item.n.includes("Save funds in RMB");
+                if (Array.isArray(newState.budgets[month])) {
+                    newState.budgets[month].forEach(sec => {
+                        if (Array.isArray(sec.items)) {
+                            sec.items.forEach(item => {
+                                if(item.detail === undefined) item.detail = "";
+                                if(item.day === undefined) item.day = null;
+                                if(item.locked === undefined) item.locked = false;
+                                if(item.linkedItems === undefined) item.linkedItems = [];
+                                if(item.isSaving === undefined) item.isSaving = item.n ? String(item.n).includes("Save funds in RMB") : false;
+                            });
+                        }
                     });
-                });
+                }
             }
         }
 
-        if (newState.budgets[newState.currentMonth]) {
+        if (newState.budgets[newState.currentMonth] && Array.isArray(newState.budgets[newState.currentMonth])) {
             let netIncIdx = newState.budgets[newState.currentMonth].findIndex(s => s.cat === "Net Income");
             if (netIncIdx > -1) newState.collapsedCategories[netIncIdx] = true;
         }
@@ -770,19 +774,23 @@
         if (!state.currentMonth || !state.budgets[state.currentMonth]) return;
         const data = state.budgets[state.currentMonth];
         
+        if(!Array.isArray(data)) return;
+
         data.forEach((sec) => {
-            if (sec.type === 'gross income') {
+            if (sec.type === 'gross income' && Array.isArray(sec.items)) {
                 sec.items.forEach(gItem => {
                     let gBudget = 0; let gActual = 0;
-                    if (gItem.linkedItems && gItem.linkedItems.length > 0) {
+                    if (gItem.linkedItems && Array.isArray(gItem.linkedItems) && gItem.linkedItems.length > 0) {
                         gItem.linkedItems.forEach(linkId => {
                             data.forEach(s => {
-                                s.items.forEach(i => {
-                                    if (i.id === linkId) {
-                                        gBudget += i.budget;
-                                        gActual += i.actual;
-                                    }
-                                });
+                                if(Array.isArray(s.items)) {
+                                    s.items.forEach(i => {
+                                        if (i.id === linkId) {
+                                            gBudget += (i.budget || 0);
+                                            gActual += (i.actual || 0);
+                                        }
+                                    });
+                                }
                             });
                         });
                     }
@@ -1238,15 +1246,19 @@
                         
                         // Add missing properties to older items
                         for (let month in newState.budgets) {
-                            newState.budgets[month].forEach(sec => {
-                                sec.items.forEach(item => {
-                                    if(item.detail === undefined) item.detail = "";
-                                    if(item.day === undefined) item.day = null;
-                                    if(item.locked === undefined) item.locked = false;
-                                    if(item.linkedItems === undefined) item.linkedItems = [];
-                                    if(item.isSaving === undefined) item.isSaving = item.n && item.n.includes("Save funds in RMB");
+                            if (Array.isArray(newState.budgets[month])) {
+                                newState.budgets[month].forEach(sec => {
+                                    if (Array.isArray(sec.items)) {
+                                        sec.items.forEach(item => {
+                                            if(item.detail === undefined) item.detail = "";
+                                            if(item.day === undefined) item.day = null;
+                                            if(item.locked === undefined) item.locked = false;
+                                            if(item.linkedItems === undefined) item.linkedItems = [];
+                                            if(item.isSaving === undefined) item.isSaving = item.n ? String(item.n).includes("Save funds in RMB") : false;
+                                        });
+                                    }
                                 });
-                            });
+                            }
                         }
                         importedData = newState;
                     }
@@ -1263,8 +1275,10 @@
                     alert("Invalid backup file format."); 
                 }
             } catch (err) { 
-                alert("Error reading file."); 
+                alert("Error reading file. Please check console for details."); 
                 console.error(err);
+            } finally {
+                event.target.value = ''; // Reset input to allow re-importing the same file
             }
         };
         reader.readAsText(file);
@@ -2518,7 +2532,7 @@
         if (btnL) btnL.disabled = !lActive;
 
         renderList(state.ebucksTemplate.s, monthData.s, 'fusion-checklist-main', 's', 'sybrandt-total', 'sybrandt-warning');
-        renderList(state.ebucksTemplate.l, monthData.l, 'luisa-checklist-main', 'l', 'luisa-total', 'luisa-warning');
+        renderList(state.ebucksTemplate.l, monthData.l, 'current-checklist-main', 'l', 'luisa-total', 'luisa-warning');
     }
 
     function updateEbucks(person, idx, isChecked) { 
