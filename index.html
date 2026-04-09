@@ -118,7 +118,7 @@
             .planner-table th, .planner-table td { padding: 4px 2px !important; font-size: 0.75rem; }
             #planner-body .num-col input { padding: 2px; font-size: 0.9rem !important;}
             
-            .add-row-btn-planner { padding: 6px 4px !important; min-height: 28px; }
+            .add-row-btn-planner { padding: 4px 2px !important; font-size: 0.75rem !important; }
 
             /* Multi-Select Bar Mobile Shrink */
             #multi-select-bar { flex-direction: column; align-items: stretch; padding: 12px 10px; gap: 8px; }
@@ -1555,7 +1555,7 @@
         const msBar = document.getElementById('multi-select-bar');
 
         if (isLocked) { 
-            lockBtn.innerHTML = '🔒 <span class="long-text">Unlock Month</span><span class="short-text">Unlock</span>'; 
+            lockBtn.innerHTML = '🔒 <span class="long-text">Unlock Budget</span><span class="short-text">Edit</span>'; 
             lockBtn.className = 'secondary'; 
             if(addCatBtn) addCatBtn.style.display = 'none';
             if(clearMonthBtn) clearMonthBtn.disabled = true;
@@ -1590,6 +1590,7 @@
 
         data.forEach((sec, sIdx) => {
             const isCollapsed = state.collapsedCategories[sIdx];
+            const isExpense = sec.type === 'expense';
             
             let subB = 0, subA = 0;
             sec.items.forEach(item => {
@@ -2380,7 +2381,7 @@
                         let shortTag = p.type === 'Actual' ? 'A' : 'P';
                         
                         html += `<tr class="clickable-row bg-white" onclick="openPlannerEdit('${p.id}', event)" data-id="${p.id}" data-month="${mStr}">
-                            <td style="text-align:center;" class="planner-drag-mobile-hide"><span class="drag-handle" onmousedown="startCustomDrag(event, 'planner-item', '${p.id}', null, null, '${mStr}')" ontouchstart="startCustomDrag(event, 'planner-item', '${p.id}', null, null, '${mStr}')">≡</span></td>
+                            <td style="text-align:center;" class="planner-drag-mobile-hide"><span class="drag-handle" onmousedown="startCustomDrag(event, 'planner-item', '${p.id}', null, null, '${mStr}')" ontouchstart="handlePlannerTouchStart(event, '${p.id}', '${mStr}')" ontouchmove="handlePlannerTouchMove()" ontouchend="handlePlannerTouchEnd()">≡</span></td>
                             <td>${dispDesc} <span class="short-text" style="background-color:${tagBg}; color:${tagColor}; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.65rem; margin-left: 5px; cursor: pointer;" onclick="openTypeMenu('${p.id}', event)">${shortTag}</span></td>
                             <td class="num-col planner-hide-mobile">${p.inc === 0 ? '' : formatMoney(p.inc)}</td>
                             <td class="num-col planner-hide-mobile" style="color:#dc2626;">${p.exp === 0 ? '' : formatMoney(p.exp)}</td>
@@ -2449,9 +2450,8 @@
                 html += `<tr class="add-row-btn-tr">
                     <td class="planner-drag-mobile-hide" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
                     <td style="border-top: 1px dashed #d1d5db; padding: 0;">
-                        <button class="add-row-btn add-row-btn-planner" style="width: 100%; justify-content: flex-start; border: none; border-radius: 0; background: transparent; margin:0;" onclick="startAddPlannerItem('${mStr}', event)">
-                            <span class="long-text">+ Add Manual Entry</span>
-                            <span class="short-text">+ Add Entry</span>
+                        <button class="add-row-btn add-row-btn-planner" style="width: 100%; justify-content: flex-start; border: none; border-radius: 0; padding: 10px; background: transparent; margin:0;" onclick="startAddPlannerItem('${mStr}', event)">
+                            + Add Entry
                         </button>
                     </td>
                     <td class="num-col planner-hide-mobile" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
@@ -2553,8 +2553,12 @@
             
             item.val = item.inc - item.exp;
 
-            if(item.id.startsWith('temp_')) {
-                item.id = Date.now().toString(); 
+            if (item.desc.trim() === '' && item.inc === 0 && item.exp === 0) {
+                state.planner = state.planner.filter(p => p.id !== activePlannerEditId);
+            } else {
+                if(item.id.startsWith('temp_')) {
+                    item.id = Date.now().toString(); 
+                }
             }
         }
         activePlannerEditId = null;
