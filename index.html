@@ -2150,7 +2150,7 @@
             <td colspan="2" class="planner-hide-mobile" style="border-top: 2px solid #1f2937; font-weight:bold; text-align:right; padding: 8px 15px 8px 10px;">Running Balance</td>
             <td class="num-col" style="border-top: 2px solid #1f2937; font-weight:bold; color:#1f2937;">
                 <span class="long-text" style="font-size:1.1rem;" id="rb_val_${id}_long">${formatBalance(balanceAmount)}</span>
-                <span class="short-text" style="font-size:1.1rem;" id="rb_val_${id}_short">${formatBalance(balanceAmount)}</span>
+                <span class="short-text" id="rb_val_${id}_short">${formatBalance(balanceAmount)}</span>
             </td>
         </tr>`;
     }
@@ -2251,10 +2251,11 @@
                         let dispDesc = p.desc || `<span style="color:#9ca3af;font-style:italic;">Add Description</span>`;
                         let tagColor = p.type === 'Actual' ? '#0369a1' : '#0f766e';
                         let tagBg = p.type === 'Actual' ? '#e0f2fe' : '#ccfbf1';
+                        let shortTag = p.type === 'Actual' ? 'A' : 'P';
                         
                         html += `<tr class="clickable-row bg-white" onclick="openPlannerEdit('${p.id}', event)" data-id="${p.id}" data-month="${mStr}">
                             <td style="text-align:center;" class="planner-drag-mobile-hide"><span class="drag-handle" onmousedown="startCustomDrag(event, 'planner-item', '${p.id}', null, null, '${mStr}')" ontouchstart="startCustomDrag(event, 'planner-item', '${p.id}', null, null, '${mStr}')">≡</span></td>
-                            <td>${dispDesc}</td>
+                            <td>${dispDesc} <span class="short-text" style="background-color:${tagBg}; color:${tagColor}; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.65rem; margin-left: 5px;">${shortTag}</span></td>
                             <td class="num-col planner-hide-mobile">${p.inc === 0 ? '' : formatMoney(p.inc)}</td>
                             <td class="num-col planner-hide-mobile">${p.exp === 0 ? '' : formatMoney(p.exp)}</td>
                             <td class="planner-hide-mobile"><span style="background-color:${tagBg}; color:${tagColor}; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">${p.type}</span></td>
@@ -2275,7 +2276,7 @@
                 
                 html += `<tr class="bg-white" onclick="toggleRB('cc_${mStr}')">
                     <td class="planner-drag-mobile-hide"></td>
-                    <td style="color:${discColor}; font-style:italic;">${discName} (Auto)</td>
+                    <td style="color:#6b7280; font-style:italic;">${discName} (Auto)</td>
                     <td class="num-col planner-hide-mobile" style="color:${discColor};">${discVar >= 0 && discVar !== 0 ? formatMoney(discVar) : ''}</td>
                     <td class="num-col planner-hide-mobile" style="color:${discColor};">${discVar < 0 ? formatMoney(Math.abs(discVar)) : ''}</td>
                     <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
