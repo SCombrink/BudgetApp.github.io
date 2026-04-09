@@ -118,7 +118,7 @@
             .planner-table th, .planner-table td { padding: 4px 2px !important; font-size: 0.75rem; }
             #planner-body .num-col input { padding: 2px; font-size: 0.9rem !important;}
             
-            .add-row-btn-planner { padding: 8px !important; }
+            .add-row-btn-planner { padding: 6px 4px !important; min-height: 28px; }
 
             /* Multi-Select Bar Mobile Shrink */
             #multi-select-bar { flex-direction: column; align-items: stretch; padding: 12px 10px; gap: 8px; }
@@ -207,6 +207,7 @@
         .multi-select-cb { transform: scale(1.3); margin-right: 10px; cursor: pointer; }
         
         .floating-drag-clone { position: fixed; pointer-events: none; z-index: 9999; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.15); opacity: 0.95; border-collapse: collapse; }
+        .drag-placeholder td, .drag-placeholder div { background: #eff6ff !important; border: 2px dashed #3b82f6 !important; padding: 15px !important; text-align: center; color: #3b82f6; font-weight: bold; }
         
         .add-row-btn { background: transparent; border: 2px dashed #d1d5db; color: #6b7280; padding: 8px 15px; border-radius: 6px; justify-content: flex-start; cursor: pointer; font-weight: 600; transition: all 0.2s; display: inline-flex;}
         .add-row-btn:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
@@ -709,6 +710,9 @@
     let isScrolling = false;
     let scrollTimeout = null;
     
+    let plannerDragTimer = null;
+    let isPlannerDragging = false;
+
     if (!state || state.version < 14.17) {
         let oldState = state || JSON.parse(localStorage.getItem('budgetApp_v14.16')) || JSON.parse(localStorage.getItem('budgetApp_v14.15')) || { budgets: {}, planner: [], ebucks: { s: {}, l: {} }, lockedMonths: {}, collapsedCategories: {}, collapsedPlannerMonths: {} };
         
@@ -875,6 +879,23 @@
     }
     
     function handlePressEnd() { clearTimeout(pressTimer); }
+    
+    function handlePlannerTouchStart(e, id, mStr) {
+        if (e.target.closest('.drag-handle') || e.target.closest('button') || e.target.closest('.short-text[onclick]')) return;
+        plannerDragTimer = setTimeout(() => {
+            isPlannerDragging = true;
+            startCustomDrag(e, 'planner-item', id, null, null, mStr);
+        }, 400); 
+    }
+
+    function handlePlannerTouchMove() {
+        clearTimeout(plannerDragTimer);
+    }
+
+    function handlePlannerTouchEnd() {
+        clearTimeout(plannerDragTimer);
+        setTimeout(() => { isPlannerDragging = false; }, 100);
+    }
     
     function activateMultiSelect(type, idOrSidx) {
         const scrollArea = document.getElementById('scroll-area');
@@ -1569,7 +1590,6 @@
 
         data.forEach((sec, sIdx) => {
             const isCollapsed = state.collapsedCategories[sIdx];
-            const isExpense = sec.type === 'expense';
             
             let subB = 0, subA = 0;
             sec.items.forEach(item => {
@@ -1620,12 +1640,10 @@
                 let variance = (sec.type === 'income' || sec.type === 'gross income') ? item.actual - item.budget : item.budget - item.actual;
                 let varClass = variance > 0 ? 'positive' : (variance < 0 ? 'negative' : '');
                 
-                const budgetColorClass = isExpense ? 'expense-input' : '';
-                
                 const disabledAttrBudget = (isLocked || isAutoCalc || itemIsLocked || multiSelectMode) ? 'disabled' : '';
-                const inputClassBudget = (isLocked || isAutoCalc || itemIsLocked || multiSelectMode) ? `locked-input table-input ${budgetColorClass}` : `table-input ${budgetColorClass}`;
+                const inputClassBudget = (isLocked || isAutoCalc || itemIsLocked || multiSelectMode) ? `locked-input table-input` : `table-input`;
                 const disabledAttrActual = (isAutoCalc || itemIsLocked || multiSelectMode) ? 'disabled' : '';
-                const inputClassActual = (isAutoCalc || itemIsLocked || multiSelectMode) ? `locked-input table-input ${budgetColorClass}` : `table-input ${budgetColorClass}`;
+                const inputClassActual = (isAutoCalc || itemIsLocked || multiSelectMode) ? `locked-input table-input` : `table-input`;
                 
                 let rowClickEvent = `onclick="openEditItem('${id}', ${sIdx}, ${iIdx})"`;
                 if (multiSelectMode) { rowClickEvent = `onclick="toggleSelection(event, 'item', '${id}')"`; }
@@ -1715,26 +1733,42 @@
         const monthLocked = state.lockedMonths[state.currentMonth];
         const itemLocked = document.getElementById('edit-locked').checked;
         const isGrossIncome = state.budgets[state.currentMonth][currentEditSIdx].type === 'gross income';
-        const effectivelyLocked = monthLocked || itemLocked || isGrossIncome;
+        
+        const detailLocked = monthLocked || itemLocked || isGrossIncome;
+        const actualLocked = itemLocked || isGrossIncome;
         
         document.getElementById('lock-status-text').innerText = itemLocked ? "(Locked)" : "(Unlocked)";
         document.getElementById('lock-status-text').style.fontWeight = itemLocked ? "bold" : "normal";
         
         document.getElementById('edit-locked').disabled = monthLocked && tempEditState.locked; 
 
-        const inputs = [
-            'edit-name', 'edit-detail', 'edit-day', 'edit-budget', 'edit-actual', 
+        const detailInputs = [
+            'edit-name', 'edit-detail', 'edit-day', 'edit-budget', 
             'edit-iscc', 'edit-exclude', 'edit-ebucks-pay', 'edit-issaving',
-            'cc-limit', 'cc-spent', 'cc-remaining', 'add-subitem-btn', 'edit-delete-btn',
+            'cc-limit', 'edit-delete-btn',
             'gross-add-select', 'gross-add-btn'
         ];
         
-        inputs.forEach(id => {
+        const actualInputs = [
+            'edit-actual', 'cc-spent', 'cc-remaining', 'add-subitem-btn'
+        ];
+        
+        detailInputs.forEach(id => {
             const el = document.getElementById(id);
             if(el) {
-                el.disabled = effectivelyLocked;
+                el.disabled = detailLocked;
                 if(el.classList.contains('val-input') || (el.tagName === 'INPUT' && el.type === 'text')) {
-                    effectivelyLocked ? el.classList.add('locked-input') : el.classList.remove('locked-input');
+                    detailLocked ? el.classList.add('locked-input') : el.classList.remove('locked-input');
+                }
+            }
+        });
+
+        actualInputs.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.disabled = actualLocked;
+                if(el.classList.contains('val-input') || (el.tagName === 'INPUT' && el.type === 'text')) {
+                    actualLocked ? el.classList.add('locked-input') : el.classList.remove('locked-input');
                 }
             }
         });
@@ -1874,7 +1908,9 @@
     }
 
     function clearEditActual() {
-        if (state.lockedMonths[state.currentMonth] || (tempEditState && tempEditState.locked)) return;
+        if (state.lockedMonths[state.currentMonth] || (tempEditState && tempEditState.locked) && !isGrossIncome) {
+            // Note: Overridden by the actual inputs bypass.
+        }
         document.getElementById('edit-actual').value = "0";
         handleNumberBlur(document.getElementById('edit-actual'), tempEditState.actual, (val, bd) => { 
             tempEditState.actual = val; 
@@ -1917,7 +1953,7 @@
 
     function renderSubItemsTemp() {
         if (!tempEditState) return;
-        const effectivelyLocked = state.lockedMonths[state.currentMonth] || tempEditState.locked;
+        const effectivelyLocked = tempEditState.locked || state.budgets[state.currentMonth][currentEditSIdx].type === 'gross income';
         let html = ''; let sum = 0; const inputType = 'text';
 
         tempEditState.subItems.forEach((sub, idx) => {
@@ -2316,7 +2352,7 @@
                             <td><input type="text" id="pe-desc" style="width:100%; padding:6px; box-sizing:border-box;" value="${p.desc}" placeholder="Add Description" onblur="acceptPlannerEdit(event)" onkeydown="if(event.key==='Enter' || event.key==='Escape') acceptPlannerEdit(event)"></td>
                             
                             <td class="num-col planner-hide-mobile"><input type="${inputType}" inputmode="text" id="pe-inc" style="width:100%; padding:6px; box-sizing:border-box; text-align:right;" value="${formatInputNumber(p.inc)}" placeholder="0" onfocus="handleNumberFocus(this, ${p.inc})" oninput="updatePlannerBalance()" onblur="acceptPlannerEdit(event)" onkeydown="if(event.key==='Enter' || event.key==='Escape') acceptPlannerEdit(event)"></td>
-                            <td class="num-col planner-hide-mobile"><input type="${inputType}" inputmode="text" id="pe-exp" style="width:100%; padding:6px; box-sizing:border-box; text-align:right;" value="${formatInputNumber(p.exp)}" placeholder="0" onfocus="handleNumberFocus(this, ${p.exp})" oninput="updatePlannerBalance()" onblur="acceptPlannerEdit(event)" onkeydown="if(event.key==='Enter' || event.key==='Escape') acceptPlannerEdit(event)"></td>
+                            <td class="num-col planner-hide-mobile"><input type="${inputType}" inputmode="text" id="pe-exp" style="width:100%; padding:6px; box-sizing:border-box; text-align:right; color:#dc2626;" value="${formatInputNumber(p.exp)}" placeholder="0" onfocus="handleNumberFocus(this, ${p.exp})" oninput="updatePlannerBalance()" onblur="acceptPlannerEdit(event)" onkeydown="if(event.key==='Enter' || event.key==='Escape') acceptPlannerEdit(event)"></td>
 
                             <td class="planner-hide-mobile">
                                 <select id="pe-type" style="padding:6px; width:100%; box-sizing:border-box; font-size:0.9rem;">
@@ -2347,7 +2383,7 @@
                             <td style="text-align:center;" class="planner-drag-mobile-hide"><span class="drag-handle" onmousedown="startCustomDrag(event, 'planner-item', '${p.id}', null, null, '${mStr}')" ontouchstart="startCustomDrag(event, 'planner-item', '${p.id}', null, null, '${mStr}')">≡</span></td>
                             <td>${dispDesc} <span class="short-text" style="background-color:${tagBg}; color:${tagColor}; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.65rem; margin-left: 5px; cursor: pointer;" onclick="openTypeMenu('${p.id}', event)">${shortTag}</span></td>
                             <td class="num-col planner-hide-mobile">${p.inc === 0 ? '' : formatMoney(p.inc)}</td>
-                            <td class="num-col planner-hide-mobile">${p.exp === 0 ? '' : formatMoney(p.exp)}</td>
+                            <td class="num-col planner-hide-mobile" style="color:#dc2626;">${p.exp === 0 ? '' : formatMoney(p.exp)}</td>
                             <td class="planner-hide-mobile"><span style="background-color:${tagBg}; color:${tagColor}; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">${p.type}</span></td>
                             <td style="text-align:center;" class="planner-hide-mobile"></td>
                             <td class="num-col">
@@ -2366,7 +2402,7 @@
                 
                 html += `<tr class="bg-white" onclick="toggleRB('cc_${mStr}')">
                     <td class="planner-drag-mobile-hide"></td>
-                    <td style="color:${discColor}; font-style:italic;">${discName} (Auto)</td>
+                    <td style="color:#6b7280; font-style:italic;">${discName} (Auto)</td>
                     <td class="num-col planner-hide-mobile" style="color:${discColor};">${discVar >= 0 && discVar !== 0 ? formatMoney(discVar) : ''}</td>
                     <td class="num-col planner-hide-mobile" style="color:${discColor};">${discVar < 0 ? formatMoney(Math.abs(discVar)) : ''}</td>
                     <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
@@ -2384,7 +2420,7 @@
                     <td class="planner-drag-mobile-hide"></td>
                     <td style="color:#6b7280; font-style:italic;">Budget Float (Auto)</td>
                     <td class="num-col planner-hide-mobile" style="color:#6b7280;">${marginInc === 0 ? '' : formatMoney(marginInc)}</td>
-                    <td class="num-col planner-hide-mobile" style="color:#6b7280;">${marginExp === 0 ? '' : formatMoney(marginExp)}</td>
+                    <td class="num-col planner-hide-mobile" style="color:#dc2626;">${marginExp === 0 ? '' : formatMoney(marginExp)}</td>
                     <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
                     <td class="planner-hide-mobile"></td>
                     <td class="num-col" style="color:#6b7280;">
@@ -2400,7 +2436,7 @@
                     <td class="planner-drag-mobile-hide"></td>
                     <td style="color:#6b7280; font-style:italic; cursor:pointer;">Savings (Auto) <span style="color:#9ca3af; font-size:0.85rem;">⚙</span></td>
                     <td class="num-col planner-hide-mobile" style="color:#6b7280;">${savings === 0 ? '' : formatMoney(savings)}</td>
-                    <td class="num-col planner-hide-mobile" style="color:#6b7280;"></td>
+                    <td class="num-col planner-hide-mobile" style="color:#dc2626;"></td>
                     <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
                     <td class="planner-hide-mobile"></td>
                     <td class="num-col" style="color:#6b7280;">
@@ -2409,6 +2445,20 @@
                     </td>
                 </tr>`;
                 html += getRunningBalanceRow('savings_' + mStr, balance);
+
+                html += `<tr class="add-row-btn-tr">
+                    <td class="planner-drag-mobile-hide" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
+                    <td style="border-top: 1px dashed #d1d5db; padding: 0;">
+                        <button class="add-row-btn add-row-btn-planner" style="width: 100%; justify-content: flex-start; border: none; border-radius: 0; background: transparent; margin:0;" onclick="startAddPlannerItem('${mStr}', event)">
+                            <span class="long-text">+ Add Manual Entry</span>
+                            <span class="short-text">+ Add Entry</span>
+                        </button>
+                    </td>
+                    <td class="num-col planner-hide-mobile" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
+                    <td class="num-col planner-hide-mobile" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
+                    <td colspan="2" class="planner-hide-mobile" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
+                    <td class="num-col" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
+                </tr>`;
 
                 // 5. Closing Balance
                 html += `<tr class="bg-grey">
@@ -2423,20 +2473,6 @@
                         <span class="long-text" style="font-size:1.1rem;">${formatBalance(balance)}</span>
                         <span class="short-text">${formatBalance(balance)}</span>
                     </td>
-                </tr>`;
-
-                html += `<tr class="add-row-btn-tr">
-                    <td class="planner-drag-mobile-hide" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
-                    <td style="border-top: 1px dashed #d1d5db; padding: 0;">
-                        <button class="add-row-btn add-row-btn-planner" style="width: 100%; justify-content: flex-start; border: none; border-radius: 0; padding: 12px; background: transparent;" onclick="startAddPlannerItem('${mStr}', event)">
-                            <span class="long-text">+ Add Manual Entry</span>
-                            <span class="short-text">+ Add Entry</span>
-                        </button>
-                    </td>
-                    <td class="num-col planner-hide-mobile" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
-                    <td class="num-col planner-hide-mobile" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
-                    <td colspan="2" class="planner-hide-mobile" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
-                    <td class="num-col" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
                 </tr>`;
             } else {
                 balance = endBalanceForHeader;
@@ -2459,6 +2495,10 @@
 
     function openPlannerEdit(id, event) {
         if(event) event.stopPropagation();
+        if(isPlannerDragging) {
+            isPlannerDragging = false;
+            return;
+        }
         if(activePlannerEditId === id) return;
         if(activePlannerEditId) acceptPlannerEdit();
         activePlannerEditId = id;
@@ -2765,7 +2805,8 @@
             type, id, sIdx, iIdx, mStr, prefix, targetRow, clone, placeholder,
             startY: e.touches ? e.touches[0].clientY : e.clientY,
             startX: e.touches ? e.touches[0].clientX : e.clientX,
-            offsetY: (e.touches ? e.touches[0].clientY : e.clientY) - targetRow.getBoundingClientRect().top
+            offsetY: (e.touches ? e.touches[0].clientY : e.clientY) - targetRow.getBoundingClientRect().top,
+            initialLeft: targetRow.getBoundingClientRect().left
         };
 
         targetRow.style.display = 'none'; // hide original row immediately
@@ -2783,7 +2824,7 @@
         e.preventDefault();
         let y = e.touches ? e.touches[0].clientY : e.clientY;
         dragObj.clone.style.top = (y - dragObj.offsetY) + 'px';
-        dragObj.clone.style.left = dragObj.targetRow.getBoundingClientRect().left + 'px';
+        dragObj.clone.style.left = dragObj.initialLeft + 'px';
         
         dragObj.clone.style.visibility = 'hidden';
         let elemUnder = document.elementFromPoint(dragObj.startX, y);
