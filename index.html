@@ -647,6 +647,17 @@
     </div>
 </div>
 
+<div id="type-menu-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 250px; padding: 20px;">
+        <h2 style="margin-top:0; color:#1f2937; margin-bottom: 15px; font-size: 1.2rem;">Set Type</h2>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            <button style="width:100%; background-color:#e0f2fe; color:#0369a1; border: 1px solid #7dd3fc; font-weight:bold; padding: 10px;" onclick="setPlannerType('Actual')">Actual (A)</button>
+            <button style="width:100%; background-color:#ccfbf1; color:#0f766e; border: 1px solid #5eead4; font-weight:bold; padding: 10px;" onclick="setPlannerType('Planned')">Planned (P)</button>
+            <button class="secondary" style="width:100%; margin-top: 10px; padding: 10px;" onclick="closeTypeMenu()">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <div id="global-swipe-delete" class="swipe-pill" onclick="executeSwipeDelete()">Delete</div>
 
 <script>
@@ -666,6 +677,7 @@
     let valuesHidden = false;
     let unsavedChangesSinceBackup = false; 
     let activePlannerEditId = null; 
+    let activeTypeEditId = null;
     
     // Multi Select Global State
     let multiSelectMode = false;
@@ -1532,17 +1544,12 @@
                     </div>
                 </td>
                 <td class="num-col" style="font-size:0.9rem;">
-                    <span class="short-text" style="color:#6b7280; font-size:0.75rem; font-weight:normal; margin-right:4px;">Bud:</span>
-                    <span class="long-text" style="color:#6b7280; font-size:0.75rem; font-weight:normal; margin-right:4px;">Budget</span>
                     ${formatMoney(subB)}
                 </td>
                 <td class="num-col" style="font-size:0.9rem;">
-                    <span class="short-text" style="color:#6b7280; font-size:0.75rem; font-weight:normal; margin-right:4px;">Act:</span>
-                    <span class="long-text" style="color:#6b7280; font-size:0.75rem; font-weight:normal; margin-right:4px;">Actual</span>
                     ${formatMoney(subA)}
                 </td>
                 <td class="num-col ${subVar > 0 ? 'positive' : (subVar < 0 ? 'negative' : '')}" style="font-size:0.9rem;">
-                    <span class="short-text" style="color:#6b7280; font-size:0.75rem; font-weight:normal; margin-right:4px;">Var:</span>
                     ${formatMoney(subVar)}
                 </td>
             </tr>`;
@@ -2157,6 +2164,29 @@
             </td>
         </tr>`;
     }
+    
+    function openTypeMenu(id, event) {
+        if(event) event.stopPropagation();
+        activeTypeEditId = id;
+        document.getElementById('type-menu-modal').style.display = 'flex';
+    }
+
+    function closeTypeMenu() {
+        document.getElementById('type-menu-modal').style.display = 'none';
+        activeTypeEditId = null;
+    }
+
+    function setPlannerType(type) {
+        if(activeTypeEditId) {
+            let item = state.planner.find(p => p.id === activeTypeEditId);
+            if(item) {
+                item.type = type;
+                saveState();
+                renderPlanner();
+            }
+        }
+        closeTypeMenu();
+    }
 
     function renderPlanner() {
         let balance = getInitialPlannerBalance(state.currentMonth);
@@ -2239,7 +2269,7 @@
                             </td>
                             
                             <td style="text-align:center; padding: 4px;" class="planner-hide-mobile">
-                                <button class="danger" style="border-radius: 12px; padding: 4px 12px; font-size: 0.8rem; height: auto; width: auto;" onclick="removePlanner('${p.id}', event)">DELETE</button>
+                                <button class="danger" style="border-radius: 12px; padding: 4px 12px; font-size: 0.8rem; height: auto; width: auto;" onmousedown="removePlanner('${p.id}', event)" ontouchstart="removePlanner('${p.id}', event)">DELETE</button>
                             </td>
                             
                             <td class="num-col" style="font-weight:bold; color:#1f2937;">
@@ -2258,7 +2288,7 @@
                         
                         html += `<tr class="clickable-row bg-white" onclick="openPlannerEdit('${p.id}', event)" data-id="${p.id}" data-month="${mStr}">
                             <td style="text-align:center;" class="planner-drag-mobile-hide"><span class="drag-handle" onmousedown="startCustomDrag(event, 'planner-item', '${p.id}', null, null, '${mStr}')" ontouchstart="startCustomDrag(event, 'planner-item', '${p.id}', null, null, '${mStr}')">≡</span></td>
-                            <td>${dispDesc} <span class="short-text" style="background-color:${tagBg}; color:${tagColor}; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.65rem; margin-left: 5px;">${shortTag}</span></td>
+                            <td>${dispDesc} <span class="short-text" style="background-color:${tagBg}; color:${tagColor}; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.65rem; margin-left: 5px; cursor: pointer;" onclick="openTypeMenu('${p.id}', event)">${shortTag}</span></td>
                             <td class="num-col planner-hide-mobile">${p.inc === 0 ? '' : formatMoney(p.inc)}</td>
                             <td class="num-col planner-hide-mobile">${p.exp === 0 ? '' : formatMoney(p.exp)}</td>
                             <td class="planner-hide-mobile"><span style="background-color:${tagBg}; color:${tagColor}; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">${p.type}</span></td>
@@ -2435,7 +2465,10 @@
     }
 
     function removePlanner(id, event) { 
-        if(event) event.stopPropagation();
+        if(event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
         state.planner = state.planner.filter(p => p.id !== id); 
         if(activePlannerEditId === id) activePlannerEditId = null;
         saveState(); 
