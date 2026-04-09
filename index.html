@@ -126,6 +126,8 @@
 
             /* Mobile Planner Drag Hide */
             .planner-drag-mobile-hide { display: none !important; }
+            
+            .template-grid { grid-template-columns: 1fr !important; }
         }
 
         .planner-show-mobile { display: none !important; }
@@ -273,6 +275,12 @@
 
         /* Multi Select Top Bar */
         #multi-select-bar { display:none; background: #3b82f6; color: white; padding: 20px; justify-content: space-between; align-items: center; position: sticky; z-index: 99; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex-wrap: wrap; border-radius: 0 0 8px 8px;}
+        
+        /* Template Builder specific */
+        .template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .template-option { background: #f3f4f6; border: 2px solid #e5e7eb; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; text-align: center; transition: all 0.2s; color: #4b5563; }
+        .template-option:hover { background-color: #e5e7eb; }
+        .template-option.selected { background-color: #d1fae5; color: #065f46; border-color: #10b981; }
     </style>
 </head>
 <body>
@@ -290,12 +298,15 @@
         
         <div class="panel" style="margin-top: auto; border-bottom: none; border-top: 2px solid #e5e7eb;">
             <div class="panel-title" style="font-size: 0.9rem; color: #6b7280;">Data Management</div>
-            <div style="display: flex; gap: 10px;">
-                <button class="secondary" style="flex: 1; font-weight: 600; font-family: inherit; font-size: 0.95rem;" onclick="exportData()">⬇ Export Backup</button>
-                <label class="secondary" style="flex: 1; font-weight: 600; font-family: inherit; font-size: 0.95rem; cursor: pointer; text-align: center; padding: 8px 12px; border-radius: 4px; background: #6b7280; color: white; display: flex; justify-content: center; align-items: center; gap: 6px;">
-                    ⬆ Import Backup
-                    <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importData(event)">
-                </label>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <button class="secondary" style="flex: 1; font-weight: 600; font-family: inherit; font-size: 0.95rem;" onclick="exportData()">⬇ Export Backup</button>
+                    <label class="secondary" style="flex: 1; font-weight: 600; font-family: inherit; font-size: 0.95rem; cursor: pointer; text-align: center; padding: 8px 12px; border-radius: 4px; background: #6b7280; color: white; display: flex; justify-content: center; align-items: center; gap: 6px;">
+                        ⬆ Import Backup
+                        <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importData(event)">
+                    </label>
+                </div>
+                <button class="secondary" style="width: 100%; font-weight: 600; font-family: inherit; font-size: 0.95rem; background: #4b5563; color: white;" onclick="openTemplateBuilder(); hideSidebar();">📋 Use Template Layout</button>
             </div>
         </div>
     </div>
@@ -372,6 +383,63 @@
         </div>
     </div>
 
+    <div id="view-template-builder" class="view-section padded-view">
+        <div class="edit-header">
+            <button class="secondary" onclick="goBackToBudget()">← Back</button>
+            <h2 style="margin:0;">Budget Template Builder</h2>
+            <div style="width: 60px;"></div>
+        </div>
+        
+        <div class="panel" style="background: white; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; margin-top:0; margin-bottom: 25px;">Select your typical lifestyle options below. This will auto-generate a structured budget layout for the current month. <strong>Note: Your current custom categories (except Gross/Net Income & Payslip Expenses) will be replaced.</strong></p>
+            
+            <h3 style="margin-bottom: 10px; font-size: 1rem; color: #374151;">Marital Status</h3>
+            <div class="template-grid">
+                <div class="template-option t-status selected" data-val="single" onclick="setTemplateOption('status', 'single')">Single</div>
+                <div class="template-option t-status" data-val="married" onclick="setTemplateOption('status', 'married')">Married</div>
+            </div>
+            
+            <h3 style="margin-bottom: 10px; font-size: 1rem; color: #374151;">Dependents</h3>
+            <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+                <div class="template-option t-deps selected" style="flex: 1; min-width: 40px;" data-val="0" onclick="setTemplateOption('dependents', '0')">0</div>
+                <div class="template-option t-deps" style="flex: 1; min-width: 40px;" data-val="1" onclick="setTemplateOption('dependents', '1')">1</div>
+                <div class="template-option t-deps" style="flex: 1; min-width: 40px;" data-val="2" onclick="setTemplateOption('dependents', '2')">2</div>
+                <div class="template-option t-deps" style="flex: 1; min-width: 40px;" data-val="3" onclick="setTemplateOption('dependents', '3')">3</div>
+                <div class="template-option t-deps" style="flex: 1; min-width: 40px;" data-val="4" onclick="setTemplateOption('dependents', '4')">4+</div>
+            </div>
+
+            <div id="tpl-edu-block" style="display: none;">
+                <h3 style="margin-bottom: 10px; font-size: 1rem; color: #374151;">Education (Select all that apply)</h3>
+                <div class="template-grid">
+                    <div class="template-option t-edu" data-val="kindergarten" onclick="toggleTemplateEdu('kindergarten')">Kindergarten</div>
+                    <div class="template-option t-edu" data-val="primary" onclick="toggleTemplateEdu('primary')">Primary School</div>
+                    <div class="template-option t-edu" data-val="high" onclick="toggleTemplateEdu('high')">High School</div>
+                    <div class="template-option t-edu" data-val="tertiary" onclick="toggleTemplateEdu('tertiary')">Tertiary Education</div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom: 10px; font-size: 1rem; color: #374151;">Housing Situation</h3>
+            <div class="template-grid">
+                <div class="template-option t-housing selected" data-val="rent" onclick="setTemplateOption('housing', 'rent')">Renting</div>
+                <div class="template-option t-housing" data-val="own" onclick="setTemplateOption('housing', 'own')">Own Home / Mortgage</div>
+                <div class="template-option t-housing" data-val="family" style="grid-column: span 2;" onclick="setTemplateOption('housing', 'family')">Living with Family / Other</div>
+            </div>
+
+            <h3 style="margin-bottom: 10px; font-size: 1rem; color: #374151;">Primary Transport</h3>
+            <div class="template-grid">
+                <div class="template-option t-transport selected" data-val="car" onclick="setTemplateOption('transport', 'car')">Own Vehicle</div>
+                <div class="template-option t-transport" data-val="public" onclick="setTemplateOption('transport', 'public')">Public Transit / Uber</div>
+            </div>
+
+            <h3 style="margin-bottom: 10px; font-size: 1rem; color: #374151;">Pets</h3>
+            <div class="template-grid">
+                <div class="template-option t-pets" data-val="yes" onclick="setTemplateOption('pets', 'yes')">Yes</div>
+                <div class="template-option t-pets selected" data-val="no" onclick="setTemplateOption('pets', 'no')">No</div>
+            </div>
+        </div>
+
+        <button class="success" style="width: 100%; padding: 15px; font-size: 1.1rem; border-radius: 8px; margin-bottom: 30px;" onclick="confirmTemplate()">Create Budget From Template</button>
+    </div>
     <div id="view-planner" class="view-section">
         <div class="summary-dashboard" id="planner-summary" onclick="scrollToTop()">
             <div class="summary-box"><h3>Month</h3><div id="ps-month" class="amount">--</div></div>
@@ -712,6 +780,9 @@
     
     let plannerDragTimer = null;
     let isPlannerDragging = false;
+
+    // Template Builder State
+    let tplState = { status: 'single', dependents: '0', education: [], housing: 'rent', transport: 'car', pets: 'no' };
 
     if (!state || state.version < 14.17) {
         let oldState = state || JSON.parse(localStorage.getItem('budgetApp_v14.16')) || JSON.parse(localStorage.getItem('budgetApp_v14.15')) || { budgets: {}, planner: [], ebucks: { s: {}, l: {} }, lockedMonths: {}, collapsedCategories: {}, collapsedPlannerMonths: {} };
@@ -1179,6 +1250,124 @@
         }
     }
 
+    // --- TEMPLATE BUILDER FUNCTIONS ---
+    function openTemplateBuilder() {
+        openView('view-template-builder');
+    }
+    
+    function setTemplateOption(category, value) {
+        tplState[category] = value;
+        document.querySelectorAll('.t-' + category).forEach(el => el.classList.remove('selected'));
+        document.querySelector(`.t-${category}[data-val="${value}"]`).classList.add('selected');
+        
+        if (category === 'dependents') {
+            const eduBlock = document.getElementById('tpl-edu-block');
+            if (value === '0') {
+                eduBlock.style.display = 'none';
+                tplState.education = [];
+                document.querySelectorAll('.t-edu').forEach(el => el.classList.remove('selected'));
+            } else {
+                eduBlock.style.display = 'block';
+            }
+        }
+    }
+    
+    function toggleTemplateEdu(value) {
+        const el = document.querySelector(`.t-edu[data-val="${value}"]`);
+        if (tplState.education.includes(value)) {
+            tplState.education = tplState.education.filter(v => v !== value);
+            el.classList.remove('selected');
+        } else {
+            tplState.education.push(value);
+            el.classList.add('selected');
+        }
+    }
+    
+    function confirmTemplate() {
+        if(confirm("Are you sure you want to build this template? Your current month's unprotected categories will be DELETED and replaced with the new template.")) {
+            applyTemplate();
+        }
+    }
+    
+    function applyTemplate() {
+        // Keep protected categories exactly as they are
+        let protectedBase = state.budgets[state.currentMonth].filter(c => ["Gross Income", "Payslip Expenses", "Net Income"].includes(c.cat));
+        
+        let newCats = [];
+        
+        const createItem = (n, budget, isSaving=false) => {
+            return {
+                id: generateId(), n: n, detail: "", day: null, locked: false,
+                exclude: false, isCC: false, isEbucksPay: false, isSaving: isSaving,
+                budget: budget, actual: 0, limit: 0, remaining: 0, subItems: [], linkedItems: []
+            };
+        };
+
+        // Housing & Utilities
+        let houseItems = [];
+        if (tplState.housing === 'rent') {
+            houseItems.push(createItem("Rent", 8000), createItem("Electricity & Water", 1500), createItem("Internet/Fibre", 800));
+        } else if (tplState.housing === 'own') {
+            houseItems.push(createItem("Mortgage", 12000), createItem("Rates & Taxes", 1500), createItem("Home Maintenance", 1000), createItem("Electricity & Water", 2000), createItem("Internet/Fibre", 800));
+        } else {
+            houseItems.push(createItem("Board / Contribution", 3000));
+        }
+        newCats.push({cat: "Housing & Utilities", type: "expense", items: houseItems});
+
+        // Transport
+        let transItems = [];
+        if (tplState.transport === 'car') {
+            transItems.push(createItem("Car Installment", 4000), createItem("Fuel", 2000), createItem("Car Insurance", 1000), createItem("Car Maintenance", 500));
+        } else {
+            transItems.push(createItem("Public Transport / Uber", 1500));
+        }
+        newCats.push({cat: "Transport", type: "expense", items: transItems});
+
+        // Food & Living
+        let foodItems = [];
+        foodItems.push(createItem("Groceries", tplState.status === 'married' ? 6000 : 3500));
+        if (tplState.pets === 'yes') {
+            foodItems.push(createItem("Pet Food & Vet", 800));
+        }
+        newCats.push({cat: "Food & Living", type: "expense", items: foodItems});
+
+        // Kids & Education
+        if (tplState.dependents !== '0') {
+            let kidItems = [createItem("Childcare / Nanny", 3000), createItem("Kids Clothing & Extras", 1500)];
+            if (tplState.education.includes('kindergarten')) kidItems.push(createItem("Kindergarten Fees", 2500));
+            if (tplState.education.includes('primary')) kidItems.push(createItem("Primary School Fees", 3500));
+            if (tplState.education.includes('high')) kidItems.push(createItem("High School Fees", 4500));
+            if (tplState.education.includes('tertiary')) kidItems.push(createItem("University / College", 5000));
+            newCats.push({cat: "Kids & Education", type: "expense", items: kidItems});
+        }
+
+        // Discretionary
+        newCats.push({
+            cat: "Discretionary Spending", 
+            type: "expense", 
+            items: [createItem("Eating Out", 1500), createItem("Entertainment", 1000), createItem("Personal Care / Clothing", 800)]
+        });
+
+        // Savings
+        newCats.push({
+            cat: "Savings & Investments", 
+            type: "expense", 
+            items: [createItem("Emergency Fund", 2000, true), createItem("Retirement / Investments", 1500, true)]
+        });
+        
+        state.budgets[state.currentMonth] = [...protectedBase, ...newCats];
+        
+        // Reset collapse state for this month so the user sees everything
+        for(let i=0; i<state.budgets[state.currentMonth].length; i++){
+            state.collapsedCategories[i] = false;
+        }
+
+        saveState();
+        renderBudget();
+        renderPlanner();
+        goBackToBudget();
+    }
+
     // --- UTILITIES: Global Toggles & Formatting ---
     const eyeOffSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
     const eyeSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
@@ -1555,7 +1744,7 @@
         const msBar = document.getElementById('multi-select-bar');
 
         if (isLocked) { 
-            lockBtn.innerHTML = '🔒 <span class="long-text">Unlock Budget</span><span class="short-text">Edit</span>'; 
+            lockBtn.innerHTML = '🔒 <span class="long-text">Unlock Month</span><span class="short-text">Unlock</span>'; 
             lockBtn.className = 'secondary'; 
             if(addCatBtn) addCatBtn.style.display = 'none';
             if(clearMonthBtn) clearMonthBtn.disabled = true;
@@ -1590,7 +1779,6 @@
 
         data.forEach((sec, sIdx) => {
             const isCollapsed = state.collapsedCategories[sIdx];
-            const isExpense = sec.type === 'expense';
             
             let subB = 0, subA = 0;
             sec.items.forEach(item => {
@@ -1822,1141 +2010,3 @@
             document.getElementById('gross-links-container').style.display = 'block';
             
             const sel = document.getElementById('gross-add-select');
-            let opts = '<option value="">-- Select Line Item --</option>';
-            state.budgets[state.currentMonth].forEach(sec => {
-                if (sec.cat === "Payslip Expenses" || sec.cat === "Net Income") {
-                    opts += `<optgroup label="${sec.cat}">`;
-                    sec.items.forEach(i => { opts += `<option value="${i.id}">${i.n || 'Unnamed Item'}</option>`; });
-                    opts += `</optgroup>`;
-                }
-            });
-            sel.innerHTML = opts;
-            renderGrossLinksTemp();
-        } else {
-            document.getElementById('edit-toggles').style.display = 'flex';
-            document.getElementById('edit-standard-amounts').style.display = 'flex';
-            document.getElementById('subitems-container').style.display = 'block';
-            document.getElementById('gross-links-container').style.display = 'none';
-            
-            const editBudgetInput = document.getElementById('edit-budget');
-            editBudgetInput.type = inputType;
-            editBudgetInput.value = formatInputNumber(tempEditState.budget);
-            editBudgetInput.onfocus = function() { handleNumberFocus(this, tempEditState.budget); };
-            editBudgetInput.onblur = function() { handleNumberBlur(this, tempEditState.budget, (val, bd) => { tempEditState.budget = val; renderSubItemsTemp(); }); };
-
-            const editActualInput = document.getElementById('edit-actual');
-            editActualInput.type = inputType;
-            editActualInput.value = formatInputNumber(tempEditState.actual);
-            editActualInput.onfocus = function() { handleNumberFocus(this, tempEditState.actual); };
-            editActualInput.onblur = function() { handleNumberBlur(this, tempEditState.actual, (val, bd) => { 
-                tempEditState.actual = val; 
-                if (bd && bd.length > 0) tempEditState.subItems = bd;
-                if (tempEditState.isCC) {
-                    tempEditState.remaining = (tempEditState.limit || 0) - val;
-                    updateCCLogicTemp();
-                }
-                renderSubItemsTemp(); 
-            }); };
-
-            const ccLimitInput = document.getElementById('cc-limit');
-            ccLimitInput.type = inputType;
-            ccLimitInput.value = formatInputNumber(tempEditState.limit);
-            ccLimitInput.onfocus = function() { handleNumberFocus(this, tempEditState.limit); };
-            ccLimitInput.onblur = function() { handleNumberBlur(this, tempEditState.limit, (val, bd) => { 
-                tempEditState.limit = Math.max(0, val); 
-                tempEditState.remaining = tempEditState.limit - (tempEditState.actual || 0); 
-                updateCCLogicTemp(); 
-            }); };
-
-            const ccSpentInput = document.getElementById('cc-spent');
-            ccSpentInput.type = inputType;
-            ccSpentInput.value = formatInputNumber(tempEditState.actual || 0);
-            ccSpentInput.onfocus = function() { handleNumberFocus(this, tempEditState.actual || 0); };
-            ccSpentInput.onblur = function() { handleNumberBlur(this, tempEditState.actual || 0, (val, bd) => { 
-                tempEditState.actual = val; 
-                tempEditState.remaining = (tempEditState.limit || 0) - val; 
-                updateCCLogicTemp(); 
-                if(!valuesHidden) document.getElementById('edit-actual').value = formatInputNumber(tempEditState.actual);
-                renderSubItemsTemp();
-            }); };
-
-            const ccRemInput = document.getElementById('cc-remaining');
-            ccRemInput.type = inputType;
-            ccRemInput.value = formatInputNumber(tempEditState.remaining);
-            ccRemInput.onfocus = function() { handleNumberFocus(this, tempEditState.remaining); };
-            ccRemInput.onblur = function() { handleNumberBlur(this, tempEditState.remaining, (val, bd) => { 
-                tempEditState.remaining = val; 
-                tempEditState.actual = (tempEditState.limit || 0) - val; 
-                updateCCLogicTemp(); 
-                if(!valuesHidden) document.getElementById('edit-actual').value = formatInputNumber(tempEditState.actual);
-                renderSubItemsTemp();
-            }); };
-            
-            updateCCLogicTemp(); renderSubItemsTemp();
-        }
-        
-        applyEditLockState();
-        if (isNew) document.getElementById('edit-name').focus();
-    }
-    
-    function clearEditBudget() {
-        if (state.lockedMonths[state.currentMonth] || (tempEditState && tempEditState.locked)) return;
-        document.getElementById('edit-budget').value = "0";
-        handleNumberBlur(document.getElementById('edit-budget'), tempEditState.budget, (val) => { 
-            tempEditState.budget = val; 
-            renderSubItemsTemp(); 
-        });
-    }
-
-    function clearEditActual() {
-        if (state.lockedMonths[state.currentMonth] || (tempEditState && tempEditState.locked) && !isGrossIncome) {
-            // Note: Overridden by the actual inputs bypass.
-        }
-        document.getElementById('edit-actual').value = "0";
-        handleNumberBlur(document.getElementById('edit-actual'), tempEditState.actual, (val, bd) => { 
-            tempEditState.actual = val; 
-            tempEditState.subItems = []; 
-            if (tempEditState.isCC) {
-                tempEditState.remaining = (tempEditState.limit || 0) - val;
-                updateCCLogicTemp();
-            }
-            renderSubItemsTemp(); 
-        });
-    }
-
-    function updateTempControls() {
-        if (!tempEditState) return;
-        tempEditState.n = document.getElementById('edit-name').value;
-        tempEditState.detail = document.getElementById('edit-detail').value;
-        tempEditState.day = document.getElementById('edit-day').value;
-        
-        tempEditState.isCC = document.getElementById('edit-iscc').checked;
-        tempEditState.exclude = document.getElementById('edit-exclude').checked;
-        tempEditState.isEbucksPay = document.getElementById('edit-ebucks-pay').checked;
-        tempEditState.isSaving = document.getElementById('edit-issaving').checked;
-        tempEditState.locked = document.getElementById('edit-locked').checked;
-        if(state.budgets[state.currentMonth][currentEditSIdx].type !== 'gross income') {
-            document.getElementById('cc-container').style.display = tempEditState.isCC ? 'block' : 'none';
-        }
-    }
-
-    function updateCCLogicTemp() {
-        if (!tempEditState) return;
-        document.getElementById('cc-container').style.display = tempEditState.isCC ? 'block' : 'none';
-        
-        if(!valuesHidden) { 
-            document.getElementById('cc-limit').value = formatInputNumber(tempEditState.limit || 0);
-            document.getElementById('edit-actual').value = formatInputNumber(tempEditState.actual || 0); 
-            document.getElementById('cc-spent').value = formatInputNumber(tempEditState.actual || 0);
-            document.getElementById('cc-remaining').value = formatInputNumber(tempEditState.remaining || 0);
-        }
-    }
-
-    function renderSubItemsTemp() {
-        if (!tempEditState) return;
-        const effectivelyLocked = tempEditState.locked || state.budgets[state.currentMonth][currentEditSIdx].type === 'gross income';
-        let html = ''; let sum = 0; const inputType = 'text';
-
-        tempEditState.subItems.forEach((sub, idx) => {
-            const disableRow = effectivelyLocked ? 'disabled class="locked-input"' : '';
-            html += `<tr>
-                <td><input type="text" value="${sub.desc}" ${disableRow} onkeydown="if(event.key === 'Enter' || event.key === 'Escape') this.blur();" onchange="updateSubItemTemp(${idx}, 'desc', this.value)"></td>
-                <td class="num-col">
-                    <input type="${inputType}" class="val-input" value="${formatInputNumber(sub.val)}" ${disableRow} onkeydown="if(event.key === 'Enter' || event.key === 'Escape') this.blur();" onfocus="handleNumberFocus(this, ${sub.val})" onblur="handleNumberBlur(this, ${sub.val}, (val, bd) => updateSubItemTemp(${idx}, 'val', val))">
-                </td>
-                <td><button class="danger" ${effectivelyLocked ? 'disabled' : ''} onclick="removeSubItemTemp(${idx})">X</button></td>
-            </tr>`;
-            sum += sub.val;
-        });
-        document.getElementById('subitem-body').innerHTML = html;
-        
-        if (sum > tempEditState.actual) {
-            tempEditState.actual = sum;
-            if(!valuesHidden && document.getElementById('edit-actual')) {
-                document.getElementById('edit-actual').value = formatInputNumber(tempEditState.actual);
-            }
-            if (tempEditState.isCC) {
-                tempEditState.remaining = (tempEditState.limit || 0) - tempEditState.actual;
-                if(!valuesHidden && document.getElementById('cc-remaining')) {
-                    document.getElementById('cc-remaining').value = formatInputNumber(tempEditState.remaining);
-                    document.getElementById('cc-spent').value = formatInputNumber(tempEditState.actual);
-                }
-            }
-        }
-
-        const uncat = tempEditState.actual - sum;
-        const uncatEl = document.getElementById('edit-uncategorised');
-        if(uncatEl) {
-            uncatEl.innerText = formatMoney(uncat);
-            uncatEl.style.color = uncat < 0 ? '#dc2626' : '#6b7280';
-        }
-    }
-
-    function renderGrossLinksTemp() {
-        if (!tempEditState) return;
-        const effectivelyLocked = state.lockedMonths[state.currentMonth] || tempEditState.locked;
-        let html = '';
-        
-        tempEditState.linkedItems.forEach((linkId, idx) => {
-            let itemName = "Unknown Item";
-            state.budgets[state.currentMonth].forEach(s => { s.items.forEach(i => { if(i.id === linkId) itemName = i.n; }) });
-            
-            html += `<tr>
-                <td style="font-weight:bold; color:#1f2937;">${itemName}</td>
-                <td style="text-align:right;"><button class="danger round-btn" ${effectivelyLocked ? 'disabled' : ''} onclick="removeGrossLink(${idx})">X</button></td>
-            </tr>`;
-        });
-        document.getElementById('gross-links-body').innerHTML = html;
-    }
-
-    function addGrossLink() {
-        const sel = document.getElementById('gross-add-select');
-        if(sel.value && !tempEditState.linkedItems.includes(sel.value)) {
-            tempEditState.linkedItems.push(sel.value);
-            sel.value = "";
-            renderGrossLinksTemp();
-        }
-    }
-    
-    function removeGrossLink(idx) {
-        tempEditState.linkedItems.splice(idx, 1);
-        renderGrossLinksTemp();
-    }
-
-    function addSubItemTemp() { tempEditState.subItems.push({ desc: 'New Item', val: 0 }); renderSubItemsTemp(); }
-    function removeSubItemTemp(idx) { tempEditState.subItems.splice(idx, 1); renderSubItemsTemp(); }
-    function updateSubItemTemp(idx, field, val) {
-        if (field === 'val') { tempEditState.subItems[idx].val = val; } else { tempEditState.subItems[idx][field] = val; }
-        renderSubItemsTemp();
-    }
-
-    function hasUnsavedChanges() {
-        if (!tempEditState) return false;
-        const dataItem = state.budgets[state.currentMonth][currentEditSIdx].items[currentEditIIdx];
-
-        if (tempEditState.n !== dataItem.n) return true;
-        if (tempEditState.detail !== (dataItem.detail || "")) return true;
-        if (tempEditState.day !== (dataItem.day || "")) return true;
-        
-        if (tempEditState.isCC !== (dataItem.isCC || false)) return true;
-        if (tempEditState.exclude !== (dataItem.exclude || false)) return true;
-        if (tempEditState.isEbucksPay !== (dataItem.isEbucksPay || false)) return true;
-        if (tempEditState.isSaving !== (dataItem.isSaving || false)) return true;
-        if (tempEditState.locked !== (dataItem.locked || false)) return true;
-        
-        if (tempEditState.budget !== dataItem.budget) return true;
-        if (tempEditState.actual !== dataItem.actual) return true;
-        if (tempEditState.limit !== (dataItem.limit || 0)) return true;
-        if (tempEditState.remaining !== (dataItem.remaining || 0)) return true;
-        if (JSON.stringify(tempEditState.subItems) !== JSON.stringify(dataItem.subItems)) return true;
-        if (JSON.stringify(tempEditState.linkedItems) !== JSON.stringify(dataItem.linkedItems || [])) return true;
-        return false;
-    }
-
-    function handleEditBack() {
-        updateTempControls();
-        if (tempEditState && tempEditState.isNew && document.getElementById('edit-name').value.trim() === "") { discardAndLeave(); return; }
-        if (hasUnsavedChanges()) { document.getElementById('unsaved-modal').style.display = 'flex'; } 
-        else { tempEditState = null; goBackToBudget(); }
-    }
-
-    function discardAndLeave() { 
-        document.getElementById('unsaved-modal').style.display = 'none'; 
-        if (tempEditState && tempEditState.isNew) {
-            state.budgets[state.currentMonth][currentEditSIdx].items.splice(currentEditIIdx, 1);
-            saveState();
-        }
-        tempEditState = null; goBackToBudget(); renderBudget();
-    }
-
-    function saveAndClose() {
-        updateTempControls();
-        if (document.getElementById('edit-name').value.trim() === "") { alert("Please enter a description for this item."); return; }
-        document.getElementById('unsaved-modal').style.display = 'none';
-        
-        const dataItem = state.budgets[state.currentMonth][currentEditSIdx].items[currentEditIIdx];
-
-        dataItem.n = tempEditState.n;
-        dataItem.detail = tempEditState.detail;
-        dataItem.day = tempEditState.day;
-        
-        dataItem.isCC = tempEditState.isCC;
-        dataItem.exclude = tempEditState.exclude;
-        dataItem.isEbucksPay = tempEditState.isEbucksPay;
-        dataItem.isSaving = tempEditState.isSaving;
-        dataItem.locked = tempEditState.locked;
-
-        dataItem.budget = tempEditState.budget;
-        dataItem.actual = tempEditState.actual;
-        dataItem.limit = tempEditState.limit;
-        dataItem.remaining = tempEditState.remaining;
-        dataItem.subItems = JSON.parse(JSON.stringify(tempEditState.subItems));
-        dataItem.linkedItems = JSON.parse(JSON.stringify(tempEditState.linkedItems));
-
-        saveState(); tempEditState = null; renderBudget(); renderPlanner(); goBackToBudget();
-    }
-
-    function addNewLineItem(sIdx) {
-        const newId = generateId();
-        state.budgets[state.currentMonth][sIdx].items.push({ 
-            id: newId, n: "", detail: "", day: null, locked: false, exclude: false, isCC: false, isEbucksPay: false, isSaving: false,
-            budget: 0, actual: 0, subItems: [], limit: 0, remaining: 0, linkedItems: []
-        });
-        saveState(); renderBudget(); 
-        openEditItem(newId, sIdx, state.budgets[state.currentMonth][sIdx].items.length - 1, true);
-    }
-
-    function deleteCurrentItem() {
-        const item = state.budgets[state.currentMonth][currentEditSIdx].items[currentEditIIdx];
-        if(confirm(`Are you sure you want to delete "${item.n}" from THIS month?`)) {
-            state.budgets[state.currentMonth][currentEditSIdx].items.splice(currentEditIIdx, 1);
-            saveState(); tempEditState = null; renderBudget(); renderPlanner(); goBackToBudget();
-        }
-    }
-
-    // --- PLANNER LOGIC ---
-    function getBudgetNet(monthStr) {
-        if (!state.budgets[monthStr] || !Array.isArray(state.budgets[monthStr])) return 0;
-        let inc = 0, exp = 0;
-        state.budgets[monthStr].forEach((sec, sIdx) => { 
-            sec.items.forEach(item => {
-                const isEffectivelyExcluded = item.exclude || item.isEbucksPay;
-                if(sec.type !== "gross income" && sec.cat !== "Payslip Expenses" && !isEffectivelyExcluded) {
-                    if (sec.type === 'income') inc += item.budget; 
-                    else exp += item.budget;
-                }
-            });
-        });
-        return inc - exp;
-    }
-
-    function getSavingsBudget(monthStr) {
-        if (!state.budgets[monthStr]) return 0;
-        let val = 0;
-        state.budgets[monthStr].forEach(sec => {
-            sec.items.forEach(item => {
-                if (item.isSaving && !item.exclude) {
-                    val += item.budget;
-                }
-            });
-        });
-        return val;
-    }
-
-    function getInitialPlannerBalance(startMonthStr) {
-        let months = new Set();
-        Object.keys(state.budgets).forEach(m => months.add(m));
-        state.planner.forEach(p => months.add(p.month));
-        let sortedMonths = Array.from(months).sort();
-        
-        if (sortedMonths.length === 0) return 0;
-        let earliest = sortedMonths[0];
-        
-        if (startMonthStr <= earliest) return 0;
-
-        let balance = 0;
-        let [y, m] = earliest.split('-').map(Number);
-        let current = earliest;
-
-        while (current < startMonthStr) {
-            let margin = getBudgetNet(current);
-            let savings = getSavingsBudget(current);
-            
-            let discVar = 0;
-            const discCat = state.budgets[current]?.find(c => c.cat === "Discretionary Spending");
-            if (discCat) {
-                discCat.items.forEach(item => {
-                    discVar += (item.budget - item.actual);
-                });
-            }
-            
-            balance += margin + savings + discVar;
-
-            state.planner.filter(p => p.month === current).forEach(p => {
-                balance += (p.inc || 0) - (p.exp || 0);
-            });
-
-            m++;
-            if (m > 12) { m = 1; y++; }
-            current = `${y}-${m.toString().padStart(2, '0')}`;
-            
-            if(y > 2100) break; // Failsafe
-        }
-        return balance;
-    }
-
-    function updatePlannerBalance() {
-        const incEl = document.getElementById('pe-inc');
-        const expEl = document.getElementById('pe-exp');
-        const valEl = document.getElementById('pe-val');
-        
-        let inc = 0, exp = 0;
-        
-        if (window.innerWidth <= 600 && valEl) {
-            let valStr = valEl.value.toString().trim().replace('=', '').replace(/\s/g, '').replace(/,/g, '');
-            try {
-                if (/^[0-9\+\-\*\/\.\(\)]+$/.test(valStr)) { valStr = new Function('return ' + valStr)(); }
-            } catch(e){}
-            let v = parseFloat(valStr) || 0;
-            if (v >= 0) { inc = v; exp = 0; }
-            else { inc = 0; exp = Math.abs(v); }
-        } else {
-            let incStr = incEl.value.toString().trim().replace('=', '').replace(/\s/g, '').replace(/,/g, '');
-            try { if (/^[0-9\+\-\*\/\.\(\)]+$/.test(incStr)) incStr = new Function('return ' + incStr)(); } catch(e){}
-            inc = parseFloat(incStr) || 0;
-            
-            let expStr = expEl.value.toString().trim().replace('=', '').replace(/\s/g, '').replace(/,/g, '');
-            try { if (/^[0-9\+\-\*\/\.\(\)]+$/.test(expStr)) expStr = new Function('return ' + expStr)(); } catch(e){}
-            exp = parseFloat(expStr) || 0;
-        }
-        
-        const rowBaseBal = parseFloat(document.querySelector('.planner-edit-row').getAttribute('data-base-bal')) || 0;
-        const newBal = rowBaseBal + inc - exp;
-        const balEl = document.getElementById('pe-balance');
-        if (balEl) {
-            balEl.innerHTML = formatBalance(newBal);
-        }
-        
-        const rbValShort = document.getElementById('rb_val_edit_short');
-        const rbValLong = document.getElementById('rb_val_edit_long');
-        if (rbValShort) rbValShort.innerHTML = formatBalance(newBal);
-        if (rbValLong) rbValLong.innerHTML = formatBalance(newBal);
-    }
-
-    function toggleRB(id) {
-        if (window.innerWidth > 600) return;
-        const el = document.getElementById('rb_' + id);
-        if (el) {
-            const isShown = el.style.display === 'table-row';
-            document.querySelectorAll('.mobile-rb-row').forEach(row => {
-                if (!row.classList.contains('is-edit-rb')) {
-                    row.style.display = 'none';
-                }
-            });
-            el.style.display = isShown ? 'none' : 'table-row';
-        }
-    }
-
-    function getRunningBalanceRow(id, balanceAmount, isEditMode = false) {
-        const displayStyle = isEditMode && window.innerWidth <= 600 ? 'table-row' : 'none';
-        const editClass = isEditMode ? 'is-edit-rb' : '';
-        return `<tr class="bg-grey mobile-rb-row ${editClass}" id="rb_${id}" style="display: ${displayStyle};">
-            <td class="planner-drag-mobile-hide" style="border-top: 2px solid #1f2937;"></td>
-            <td style="border-top: 2px solid #1f2937; padding: 8px 10px;">
-                <span class="short-text" style="font-weight:bold; float:right;">Running Balance</span>
-                <span class="long-text" style="font-weight:bold; float:right;">Running Balance</span>
-            </td>
-            <td class="num-col planner-hide-mobile" style="border-top: 2px solid #1f2937;"></td>
-            <td class="num-col planner-hide-mobile" style="border-top: 2px solid #1f2937;"></td>
-            <td colspan="2" class="planner-hide-mobile" style="border-top: 2px solid #1f2937; font-weight:bold; text-align:right; padding: 8px 15px 8px 10px;">Running Balance</td>
-            <td class="num-col" style="border-top: 2px solid #1f2937; font-weight:bold; color:#1f2937;">
-                <span class="long-text" style="font-size:1.1rem;" id="rb_val_${id}_long">${formatBalance(balanceAmount)}</span>
-                <span class="short-text" id="rb_val_${id}_short">${formatBalance(balanceAmount)}</span>
-            </td>
-        </tr>`;
-    }
-    
-    function openTypeMenu(id, event) {
-        if(event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-        activeTypeEditId = id;
-        document.getElementById('type-menu-modal').style.display = 'flex';
-    }
-
-    function closeTypeMenu() {
-        document.getElementById('type-menu-modal').style.display = 'none';
-        activeTypeEditId = null;
-    }
-
-    function setPlannerType(type) {
-        if(activeTypeEditId) {
-            let item = state.planner.find(p => p.id === activeTypeEditId);
-            if(item) {
-                item.type = type;
-                saveState();
-                renderPlanner();
-            }
-        }
-        closeTypeMenu();
-    }
-
-    function renderPlanner() {
-        let balance = getInitialPlannerBalance(state.currentMonth);
-        let html = ''; 
-        let [y, m] = state.currentMonth.split('-').map(Number);
-        const inputType = 'text';
-
-        state.planner.forEach(p => {
-            if (p.inc === undefined) { p.inc = p.val > 0 ? p.val : 0; p.exp = p.val < 0 ? Math.abs(p.val) : 0; }
-            if (!p.type) p.type = 'Planned';
-        });
-
-        for(let i = 0; i < 12; i++) {
-            let mStr = `${y}-${m.toString().padStart(2, '0')}`;
-            const monthName = new Date(y, m-1).toLocaleString('default', {month:'long', year:'numeric'});
-            
-            const margin = getBudgetNet(mStr); 
-            const savings = getSavingsBudget(mStr);
-
-            let openingBalance = balance;
-            
-            let discVar = 0;
-            const discCat = state.budgets[mStr]?.find(c => c.cat === "Discretionary Spending");
-            if (discCat) {
-                discCat.items.forEach(item => {
-                    discVar += (item.budget - item.actual);
-                });
-            }
-
-            let monthPlannerItems = state.planner.filter(p => p.month === mStr);
-            
-            let marginInc = margin >= 0 ? margin : 0;
-            let marginExp = margin < 0 ? Math.abs(margin) : 0;
-            
-            let monthInc = marginInc + savings + (discVar >= 0 ? discVar : 0) + monthPlannerItems.reduce((sum, p) => sum + (p.inc || 0), 0);
-            let monthExp = marginExp + (discVar < 0 ? Math.abs(discVar) : 0) + monthPlannerItems.reduce((sum, p) => sum + (p.exp || 0), 0);
-            
-            let endBalanceForHeader = openingBalance + monthInc - monthExp;
-            const isCollapsed = state.collapsedPlannerMonths[mStr];
-
-            if(i === 0) {
-                document.getElementById('ps-month').innerText = monthName;
-                document.getElementById('ps-open').innerHTML = formatBalance(openingBalance);
-                document.getElementById('ps-close').innerHTML = formatBalance(endBalanceForHeader);
-            }
-
-            html += `<tr data-month-header="${mStr}" class="planner-month-header" onclick="togglePlannerMonth('${mStr}')">
-                <td class="planner-drag-mobile-hide"></td>
-                <td style="font-weight:bold; color:#1f2937; padding:8px 10px;">${monthName}</td>
-                <td class="num-col planner-hide-mobile" style="font-weight:bold; color:#1f2937;">${monthInc === 0 ? '' : formatMoney(monthInc)}</td>
-                <td class="num-col planner-hide-mobile" style="font-weight:bold; color:#dc2626;">${monthExp === 0 ? '' : formatMoney(monthExp)}</td>
-                <td colspan="2" class="planner-hide-mobile" style="text-align: right; font-size: 0.85rem; color: #4b5563; font-weight: 600; white-space: nowrap; padding-right: 15px;">${isCollapsed ? '▼ Expand' : '▲ Collapse'}</td>
-                <td class="num-col" style="font-weight:bold; color:#1f2937;">
-                    <span class="long-text">${formatBalance(openingBalance)}</span>
-                    <span class="short-text">${formatBalance(openingBalance)}</span>
-                </td>
-            </tr>`;
-
-            if (!isCollapsed) {
-                
-                // 1. Planner Items
-                monthPlannerItems.forEach(p => {
-                    let baseBalForEdit = balance;
-                    let pNet = p.inc - p.exp;
-                    balance += pNet;
-                    
-                    if (activePlannerEditId === p.id) {
-                        html += `<tr class="planner-edit-row bg-grey" data-id="${p.id}" data-month="${mStr}" data-base-bal="${baseBalForEdit}" style="box-shadow: inset 0 0 0 2px #3b82f6;">
-                            <td style="text-align:center;" class="planner-drag-mobile-hide"><span class="drag-handle" style="cursor:grab; color:#d1d5db;">≡</span></td>
-                            <td><input type="text" id="pe-desc" style="width:100%; padding:6px; box-sizing:border-box;" value="${p.desc}" placeholder="Add Description" onblur="acceptPlannerEdit(event)" onkeydown="if(event.key==='Enter' || event.key==='Escape') acceptPlannerEdit(event)"></td>
-                            
-                            <td class="num-col planner-hide-mobile"><input type="${inputType}" inputmode="text" id="pe-inc" style="width:100%; padding:6px; box-sizing:border-box; text-align:right;" value="${formatInputNumber(p.inc)}" placeholder="0" onfocus="handleNumberFocus(this, ${p.inc})" oninput="updatePlannerBalance()" onblur="acceptPlannerEdit(event)" onkeydown="if(event.key==='Enter' || event.key==='Escape') acceptPlannerEdit(event)"></td>
-                            <td class="num-col planner-hide-mobile"><input type="${inputType}" inputmode="text" id="pe-exp" style="width:100%; padding:6px; box-sizing:border-box; text-align:right; color:#dc2626;" value="${formatInputNumber(p.exp)}" placeholder="0" onfocus="handleNumberFocus(this, ${p.exp})" oninput="updatePlannerBalance()" onblur="acceptPlannerEdit(event)" onkeydown="if(event.key==='Enter' || event.key==='Escape') acceptPlannerEdit(event)"></td>
-
-                            <td class="planner-hide-mobile">
-                                <select id="pe-type" style="padding:6px; width:100%; box-sizing:border-box; font-size:0.9rem;">
-                                    <option value="Planned" ${p.type==='Planned'?'selected':''}>Planned</option>
-                                    <option value="Actual" ${p.type==='Actual'?'selected':''}>Actual</option>
-                                </select>
-                            </td>
-                            
-                            <td style="text-align:center; padding: 4px;" class="planner-hide-mobile">
-                                <button class="danger" style="border-radius: 12px; padding: 4px 12px; font-size: 0.8rem; height: auto; width: auto;" onmousedown="removePlanner('${p.id}', event)" ontouchstart="removePlanner('${p.id}', event)">DELETE</button>
-                            </td>
-                            
-                            <td class="num-col" style="font-weight:bold; color:#1f2937;">
-                                <span class="long-text" id="pe-balance">${formatBalance(balance)}</span>
-                                <span class="short-text">
-                                    <input type="${inputType}" inputmode="text" id="pe-val" style="width:100%; padding:6px; box-sizing:border-box; text-align:right;" value="${formatInputNumber(pNet)}" placeholder="0" onfocus="handleNumberFocus(this, ${pNet})" oninput="updatePlannerBalance()" onblur="acceptPlannerEdit(event)" onkeydown="if(event.key==='Enter' || event.key==='Escape') acceptPlannerEdit(event)">
-                                </span>
-                            </td>
-                        </tr>`;
-                        html += getRunningBalanceRow('edit', balance, true);
-                    } else {
-                        let dispDesc = p.desc || `<span style="color:#9ca3af;font-style:italic;">Add Description</span>`;
-                        let tagColor = p.type === 'Actual' ? '#0369a1' : '#0f766e';
-                        let tagBg = p.type === 'Actual' ? '#e0f2fe' : '#ccfbf1';
-                        let shortTag = p.type === 'Actual' ? 'A' : 'P';
-                        
-                        html += `<tr class="clickable-row bg-white" onclick="openPlannerEdit('${p.id}', event)" data-id="${p.id}" data-month="${mStr}">
-                            <td style="text-align:center;" class="planner-drag-mobile-hide"><span class="drag-handle" onmousedown="startCustomDrag(event, 'planner-item', '${p.id}', null, null, '${mStr}')" ontouchstart="handlePlannerTouchStart(event, '${p.id}', '${mStr}')" ontouchmove="handlePlannerTouchMove()" ontouchend="handlePlannerTouchEnd()">≡</span></td>
-                            <td>${dispDesc} <span class="short-text" style="background-color:${tagBg}; color:${tagColor}; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.65rem; margin-left: 5px; cursor: pointer;" onclick="openTypeMenu('${p.id}', event)">${shortTag}</span></td>
-                            <td class="num-col planner-hide-mobile">${p.inc === 0 ? '' : formatMoney(p.inc)}</td>
-                            <td class="num-col planner-hide-mobile" style="color:#dc2626;">${p.exp === 0 ? '' : formatMoney(p.exp)}</td>
-                            <td class="planner-hide-mobile"><span style="background-color:${tagBg}; color:${tagColor}; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">${p.type}</span></td>
-                            <td style="text-align:center;" class="planner-hide-mobile"></td>
-                            <td class="num-col">
-                                <span class="long-text">${formatBalance(balance)}</span>
-                                <span class="short-text" style="${pNet < 0 ? 'color:#dc2626;' : ''}">${pNet < 0 ? '-' : ''}${formatMoney(Math.abs(pNet))}</span>
-                            </td>
-                        </tr>`;
-                    }
-                });
-
-                // 2. Credit cards surplus/overspent
-                balance += discVar;
-                let discName = discVar >= 0 ? "Credit cards surplus" : "Credit cards overspent";
-                let discColor = discVar > 0 ? "#059669" : (discVar < 0 ? "#dc2626" : "#6b7280");
-                let balFormat = balance < 0 ? `color:#dc2626; font-weight:normal;` : `color:#6b7280; font-weight:normal;`;
-                
-                html += `<tr class="bg-white" onclick="toggleRB('cc_${mStr}')">
-                    <td class="planner-drag-mobile-hide"></td>
-                    <td style="color:#6b7280; font-style:italic;">${discName} (Auto)</td>
-                    <td class="num-col planner-hide-mobile" style="color:${discColor};">${discVar >= 0 && discVar !== 0 ? formatMoney(discVar) : ''}</td>
-                    <td class="num-col planner-hide-mobile" style="color:${discColor};">${discVar < 0 ? formatMoney(Math.abs(discVar)) : ''}</td>
-                    <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
-                    <td class="planner-hide-mobile"></td>
-                    <td class="num-col" style="${balFormat}">
-                        <span class="long-text">${formatBalance(balance)}</span>
-                        <span class="short-text" style="${discVar < 0 ? 'color:#dc2626;' : 'color:#059669;'}">${discVar < 0 ? '-' : ''}${formatMoney(Math.abs(discVar))}</span>
-                    </td>
-                </tr>`;
-                html += getRunningBalanceRow('cc_' + mStr, balance);
-
-                // 3. Budget Float (Auto)
-                balance += margin;
-                html += `<tr class="bg-white" onclick="toggleRB('float_${mStr}')">
-                    <td class="planner-drag-mobile-hide"></td>
-                    <td style="color:#6b7280; font-style:italic;">Budget Float (Auto)</td>
-                    <td class="num-col planner-hide-mobile" style="color:#6b7280;">${marginInc === 0 ? '' : formatMoney(marginInc)}</td>
-                    <td class="num-col planner-hide-mobile" style="color:#dc2626;">${marginExp === 0 ? '' : formatMoney(marginExp)}</td>
-                    <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
-                    <td class="planner-hide-mobile"></td>
-                    <td class="num-col" style="color:#6b7280;">
-                        <span class="long-text">${formatBalance(balance)}</span>
-                        <span class="short-text" style="${margin < 0 ? 'color:#dc2626;' : ''}">${margin < 0 ? '-' : ''}${formatMoney(Math.abs(margin))}</span>
-                    </td>
-                </tr>`;
-                html += getRunningBalanceRow('float_' + mStr, balance);
-
-                // 4. Savings (Auto)
-                balance += savings;
-                html += `<tr class="bg-white clickable-row" onclick="toggleRB('savings_${mStr}'); openSavingsModal('${mStr}')">
-                    <td class="planner-drag-mobile-hide"></td>
-                    <td style="color:#6b7280; font-style:italic; cursor:pointer;">Savings (Auto) <span style="color:#9ca3af; font-size:0.85rem;">⚙</span></td>
-                    <td class="num-col planner-hide-mobile" style="color:#6b7280;">${savings === 0 ? '' : formatMoney(savings)}</td>
-                    <td class="num-col planner-hide-mobile" style="color:#dc2626;"></td>
-                    <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
-                    <td class="planner-hide-mobile"></td>
-                    <td class="num-col" style="color:#6b7280;">
-                        <span class="long-text">${formatBalance(balance)}</span>
-                        <span class="short-text">${formatMoney(savings)}</span>
-                    </td>
-                </tr>`;
-                html += getRunningBalanceRow('savings_' + mStr, balance);
-
-                html += `<tr class="add-row-btn-tr">
-                    <td class="planner-drag-mobile-hide" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
-                    <td style="border-top: 1px dashed #d1d5db; padding: 0;">
-                        <button class="add-row-btn add-row-btn-planner" style="width: 100%; justify-content: flex-start; border: none; border-radius: 0; padding: 10px; background: transparent; margin:0;" onclick="startAddPlannerItem('${mStr}', event)">
-                            + Add Entry
-                        </button>
-                    </td>
-                    <td class="num-col planner-hide-mobile" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
-                    <td class="num-col planner-hide-mobile" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
-                    <td colspan="2" class="planner-hide-mobile" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
-                    <td class="num-col" style="border-top: 1px dashed #d1d5db; padding: 0;"></td>
-                </tr>`;
-
-                // 5. Closing Balance
-                html += `<tr class="bg-grey">
-                    <td class="planner-drag-mobile-hide" style="border-top: 2px solid #1f2937;"></td>
-                    <td style="border-top: 2px solid #1f2937; padding: 8px 10px;">
-                        <span class="short-text" style="font-weight:bold; float:right;">Closing Balance</span>
-                    </td>
-                    <td class="num-col planner-hide-mobile" style="border-top: 2px solid #1f2937;"></td>
-                    <td class="num-col planner-hide-mobile" style="border-top: 2px solid #1f2937;"></td>
-                    <td colspan="2" class="planner-hide-mobile" style="border-top: 2px solid #1f2937; font-weight:bold; text-align:right; padding: 8px 15px 8px 10px;">Closing Balance</td>
-                    <td class="num-col" style="border-top: 2px solid #1f2937; font-weight:bold; color:#1f2937;">
-                        <span class="long-text" style="font-size:1.1rem;">${formatBalance(balance)}</span>
-                        <span class="short-text">${formatBalance(balance)}</span>
-                    </td>
-                </tr>`;
-            } else {
-                balance = endBalanceForHeader;
-            }
-
-            m++; if (m > 12) { m = 1; y++; }
-        }
-        document.getElementById('planner-body').innerHTML = html;
-    }
-
-    function startAddPlannerItem(monthStr, event) {
-        if(event) event.stopPropagation();
-        if(activePlannerEditId) acceptPlannerEdit();
-        const newId = 'temp_' + Date.now();
-        state.planner.push({ id: newId, month: monthStr, desc: '', inc: 0, exp: 0, type: 'Planned' });
-        activePlannerEditId = newId;
-        renderPlanner();
-        setTimeout(() => document.getElementById('pe-desc').focus(), 50);
-    }
-
-    function openPlannerEdit(id, event) {
-        if(event) event.stopPropagation();
-        if(isPlannerDragging) {
-            isPlannerDragging = false;
-            return;
-        }
-        if(activePlannerEditId === id) return;
-        if(activePlannerEditId) acceptPlannerEdit();
-        activePlannerEditId = id;
-        renderPlanner();
-        setTimeout(() => document.getElementById('pe-desc').focus(), 50);
-    }
-
-    function acceptPlannerEdit(event) {
-        if(event) {
-            if(event.type === 'blur' && event.relatedTarget && event.relatedTarget.closest('.planner-edit-row')) return;
-            event.stopPropagation();
-        }
-        if(!activePlannerEditId) return;
-
-        const descEl = document.getElementById('pe-desc');
-        if(!descEl) {
-            activePlannerEditId = null;
-            return;
-        }
-
-        const item = state.planner.find(p => p.id === activePlannerEditId);
-        if(item) {
-            item.desc = descEl.value;
-            
-            const parseVal = (str) => {
-                if(!str || str === '***') return 0;
-                let s = str.toString().trim();
-                
-                if (s.startsWith('=') || (/[0-9]/.test(s) && /(?:\d[\+\-\*\/]|\)[\+\-\*\/]|[\+\-\*\/]\()/.test(s))) {
-                    let mStr = s.replace('=', '').replace(/\s/g, '').replace(/,/g, '');
-                    try {
-                        if (/^[0-9\+\-\*\/\.\(\)]+$/.test(mStr)) {
-                            return new Function('return ' + mStr)();
-                        }
-                    } catch(e) {}
-                }
-                return parseFloat(s.replace(/\s/g, '').replace(/,/g, '')) || 0;
-            };
-
-            const valEl = document.getElementById('pe-val');
-            if (window.innerWidth <= 600 && valEl) {
-                let v = parseVal(valEl.value);
-                if (v >= 0) { item.inc = v; item.exp = 0; }
-                else { item.inc = 0; item.exp = Math.abs(v); }
-            } else {
-                item.inc = Math.max(0, parseVal(document.getElementById('pe-inc').value));
-                item.exp = Math.max(0, parseVal(document.getElementById('pe-exp').value));
-            }
-            
-            const typeEl = document.getElementById('pe-type');
-            if(typeEl) item.type = typeEl.value;
-            
-            item.val = item.inc - item.exp;
-
-            if (item.desc.trim() === '' && item.inc === 0 && item.exp === 0) {
-                state.planner = state.planner.filter(p => p.id !== activePlannerEditId);
-            } else {
-                if(item.id.startsWith('temp_')) {
-                    item.id = Date.now().toString(); 
-                }
-            }
-        }
-        activePlannerEditId = null;
-        saveState();
-        renderPlanner();
-    }
-
-    function removePlanner(id, event) { 
-        if(event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-        state.planner = state.planner.filter(p => p.id !== id); 
-        if(activePlannerEditId === id) activePlannerEditId = null;
-        saveState(); 
-        renderPlanner(); 
-    }
-
-    // --- SAVINGS POPUP ---
-    let activeSavingsMonth = null;
-    
-    function openSavingsModal(monthStr) {
-        activeSavingsMonth = monthStr;
-        document.getElementById('savings-month-label').innerText = new Date(monthStr + '-01').toLocaleString('default', {month:'long', year:'numeric'});
-        renderSavingsModal();
-        document.getElementById('savings-modal').style.display = 'flex';
-    }
-
-    function closeSavingsModal() {
-        document.getElementById('savings-modal').style.display = 'none';
-        activeSavingsMonth = null;
-    }
-
-    function renderSavingsModal() {
-        if(!activeSavingsMonth) return;
-        const data = state.budgets[activeSavingsMonth];
-        if(!data) return;
-        
-        let html = '';
-        let selectOpts = '<option value="">-- Select Item to Add --</option>';
-        
-        data.forEach(sec => {
-            const isProtected = ["Gross Income", "Net Income"].includes(sec.cat);
-            if (!isProtected) {
-                selectOpts += `<optgroup label="${sec.cat}">`;
-                sec.items.forEach(item => {
-                    if (item.isSaving && !item.exclude) {
-                        html += `<tr>
-                            <td style="font-weight:600;">${item.n || 'Unnamed Item'}</td>
-                            <td class="num-col">${formatMoney(item.budget)}</td>
-                            <td style="text-align:right;"><button class="danger round-btn" onclick="removeSavingsItem('${item.id}')">X</button></td>
-                        </tr>`;
-                    } else {
-                        selectOpts += `<option value="${item.id}">${item.n || 'Unnamed Item'}</option>`;
-                    }
-                });
-                selectOpts += `</optgroup>`;
-            }
-        });
-        
-        document.getElementById('savings-list-body').innerHTML = html || '<tr><td colspan="3" style="text-align:center; color:#9ca3af; padding: 15px;">No items included in savings yet.</td></tr>';
-        document.getElementById('savings-add-select').innerHTML = selectOpts;
-    }
-
-    function addSavingsItem() {
-        const id = document.getElementById('savings-add-select').value;
-        if(!id) return;
-        state.budgets[activeSavingsMonth].forEach(sec => {
-            sec.items.forEach(item => {
-                if (item.id === id) item.isSaving = true;
-            });
-        });
-        saveState();
-        renderSavingsModal();
-        if(state.currentMonth === activeSavingsMonth) renderPlanner(); 
-    }
-
-    function removeSavingsItem(id) {
-        state.budgets[activeSavingsMonth].forEach(sec => {
-            sec.items.forEach(item => {
-                if (item.id === id) item.isSaving = false;
-            });
-        });
-        saveState();
-        renderSavingsModal();
-        if(state.currentMonth === activeSavingsMonth) renderPlanner();
-    }
-
-    // --- CHECKLISTS ---
-    function getEbucksLevel(pts) {
-        if(pts < 5000) return 1;
-        if(pts < 9500) return 2;
-        if(pts < 12000) return 3;
-        if(pts < 13500) return 4;
-        return 5;
-    }
-
-    function renderChecklists() {
-        const renderList = (data, stateObj, domId, prefix, totalId, warningId) => {
-            let html = ''; let total = 0; const lastIdx = data.length - 1; 
-            data.forEach((item, i) => {
-                const checked = stateObj[i] ? 'checked' : ''; if (stateObj[i]) total += item.p;
-                const isMinSpend = (i === lastIdx);
-                const rowClass = isMinSpend ? 'checklist-item min-spend-row' : 'checklist-item';
-                
-                const dragHandle = isMinSpend ? '' : `<span class="drag-handle" style="cursor:grab; margin-right:10px;" onmousedown="startCustomDrag(event, 'checklist-item', null, null, ${i}, null, '${prefix}')" ontouchstart="startCustomDrag(event, 'checklist-item', null, null, ${i}, null, '${prefix}')">≡</span>`;
-                const ptsDisplay = isMinSpend ? '' : `<input type="number" class="cl-pts" value="${item.p}" onkeydown="if(event.key === 'Enter' || event.key === 'Escape') this.blur();" onchange="updateEbucksItem('${prefix}', ${i}, 'p', this.value)">`; 
-                const delBtn = isMinSpend ? '' : `<button class="danger round-btn" style="margin-left:10px; width:20px; height:20px; font-size:10px;" onclick="deleteChecklistItem('${prefix}', ${i})">X</button>`;
-
-                html += `<div class="${rowClass}" data-person="${prefix}" data-idx="${i}">
-                    ${dragHandle}
-                    <input type="text" class="cl-desc" value="${item.d.replace(/"/g, '&quot;')}" onkeydown="if(event.key === 'Enter' || event.key === 'Escape') this.blur();" onchange="updateEbucksItem('${prefix}', ${i}, 'd', this.value)">
-                    <div style="display:flex; align-items:center;">
-                        ${ptsDisplay}
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="${prefix}_${i}" ${checked} onchange="updateEbucks('${prefix}', ${i}, this.checked)">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        ${delBtn}
-                    </div>
-                </div>`;
-            });
-            
-            const isGoNoGoMet = stateObj[lastIdx] === true;
-            
-            let headerHtml = '';
-            if(!isGoNoGoMet) {
-                document.getElementById(totalId).style.color = '#dc2626'; 
-                document.getElementById(warningId).style.display = 'block';
-                headerHtml = `<div style="background-color: #fee2e2; color: #dc2626; padding: 10px; border-radius: 6px; font-weight: bold; margin-bottom: 15px; text-align: center;">No eBucks level achieved</div>`;
-            } else {
-                document.getElementById(totalId).style.color = '#059669'; 
-                document.getElementById(warningId).style.display = 'none';
-                const level = getEbucksLevel(total);
-                const req = Math.max(0, 13500 - total);
-                const reqText = req > 0 ? `(${req} pts required for Level 5)` : `(Max Level Achieved!)`;
-                headerHtml = `<div style="background-color: #d1fae5; color: #065f46; padding: 10px; border-radius: 6px; font-weight: bold; margin-bottom: 15px; text-align: center; border: 1px solid #10b981;">Level ${level} Achieved <span style="font-weight:normal;">${reqText}</span></div>`;
-            }
-            
-            document.getElementById(domId + '-header').innerHTML = headerHtml;
-            document.getElementById(domId).innerHTML = html; 
-            document.getElementById(totalId).innerText = total;
-        };
-        
-        const monthData = state.ebucks[state.currentMonth] || {s:{}, l:{}};
-        
-        const sActive = Object.values(monthData.s).some(v => v === true);
-        const lActive = Object.values(monthData.l).some(v => v === true);
-        
-        const btnS = document.getElementById('clear-ebucks-s');
-        if (btnS) btnS.disabled = !sActive;
-        
-        const btnL = document.getElementById('clear-ebucks-l');
-        if (btnL) btnL.disabled = !lActive;
-
-        renderList(state.ebucksTemplate.s, monthData.s, 'fusion-checklist-main', 's', 'sybrandt-total', 'sybrandt-warning');
-        renderList(state.ebucksTemplate.l, monthData.l, 'current-checklist-main', 'l', 'luisa-total', 'luisa-warning');
-    }
-
-    function updateEbucks(person, idx, isChecked) { 
-        if(!state.ebucks[state.currentMonth]) state.ebucks[state.currentMonth] = {s:{}, l:{}};
-        state.ebucks[state.currentMonth][person][idx] = isChecked; 
-        saveState(); renderChecklists();  
-    }
-    
-    function updateEbucksItem(person, idx, field, val) {
-        if(field === 'p') val = parseInt(val) || 0;
-        state.ebucksTemplate[person][idx][field] = val;
-        saveState(); renderChecklists();
-    }
-
-    function addChecklistItem(person) {
-        const arr = state.ebucksTemplate[person];
-        const insertIdx = arr.length > 0 ? arr.length - 1 : 0;
-        arr.splice(insertIdx, 0, {d: "New Item", p: 0});
-        saveState(); renderChecklists();
-    }
-
-    function deleteChecklistItem(person, idx, skipConfirm=false) {
-        if(skipConfirm || confirm("Are you sure you want to delete this checklist item globally?")) {
-            state.ebucksTemplate[person].splice(idx, 1);
-            
-            for(let m in state.ebucks) {
-                let pState = state.ebucks[m][person];
-                if (!pState) continue;
-                let newState = {};
-                for(let i=0; i<state.ebucksTemplate[person].length + 1; i++) {
-                    if (i < idx && pState[i] !== undefined) newState[i] = pState[i];
-                    else if (i > idx && pState[i] !== undefined) newState[i-1] = pState[i];
-                }
-                state.ebucks[m][person] = newState;
-            }
-            saveState(); renderChecklists();
-        }
-    }
-
-    function clearEbucks(person) {
-        if(confirm("Are you sure you want to clear all toggles for this month?")) {
-            state.ebucks[state.currentMonth][person] = {};
-            saveState();
-            renderChecklists();
-        }
-    }
-
-    // --- CUSTOM DRAG AND DROP HANDLER ---
-    let dragObj = null;
-
-    function startCustomDrag(e, type, id, sIdx, iIdx, mStr, prefix) {
-        if (state.lockedMonths[state.currentMonth]) return;
-        e.preventDefault(); e.stopPropagation();
-        
-        let targetRow = e.target.closest('tr, .checklist-item, .category-tbody');
-        if (!targetRow) return;
-
-        let clone = targetRow.cloneNode(true);
-        clone.classList.add('floating-drag-clone');
-        clone.style.width = targetRow.offsetWidth + 'px';
-        document.body.appendChild(clone);
-        
-        // Create the blue dashed placeholder row
-        let placeholder = document.createElement(targetRow.tagName);
-        placeholder.className = 'drag-placeholder';
-        if (targetRow.tagName === 'TR') {
-            let td = document.createElement('td');
-            td.colSpan = 10; 
-            td.style.backgroundColor = '#eff6ff';
-            td.style.boxShadow = 'inset 0 0 0 2px #3b82f6';
-            td.style.height = targetRow.getBoundingClientRect().height + 'px';
-            placeholder.appendChild(td);
-        } else if (targetRow.tagName === 'TBODY') {
-            let tr = document.createElement('tr');
-            let td = document.createElement('td');
-            td.colSpan = 10;
-            td.style.backgroundColor = '#eff6ff';
-            td.style.boxShadow = 'inset 0 0 0 2px #3b82f6';
-            td.style.height = '50px';
-            tr.appendChild(td);
-            placeholder.appendChild(tr);
-        } else {
-            placeholder.style.backgroundColor = '#eff6ff';
-            placeholder.style.boxShadow = 'inset 0 0 0 2px #3b82f6';
-            placeholder.style.height = targetRow.getBoundingClientRect().height + 'px';
-        }
-        
-        targetRow.parentNode.insertBefore(placeholder, targetRow.nextSibling);
-
-        dragObj = {
-            type, id, sIdx, iIdx, mStr, prefix, targetRow, clone, placeholder,
-            startY: e.touches ? e.touches[0].clientY : e.clientY,
-            startX: e.touches ? e.touches[0].clientX : e.clientX,
-            offsetY: (e.touches ? e.touches[0].clientY : e.clientY) - targetRow.getBoundingClientRect().top,
-            initialLeft: targetRow.getBoundingClientRect().left
-        };
-
-        targetRow.style.display = 'none'; // hide original row immediately
-        
-        document.addEventListener('mousemove', dragMove, {passive: false});
-        document.addEventListener('touchmove', dragMove, {passive: false});
-        document.addEventListener('mouseup', dragEnd);
-        document.addEventListener('touchend', dragEnd);
-        
-        dragMove(e);
-    }
-    
-    function dragMove(e) {
-        if (!dragObj) return;
-        e.preventDefault();
-        let y = e.touches ? e.touches[0].clientY : e.clientY;
-        dragObj.clone.style.top = (y - dragObj.offsetY) + 'px';
-        dragObj.clone.style.left = dragObj.initialLeft + 'px';
-        
-        dragObj.clone.style.visibility = 'hidden';
-        let elemUnder = document.elementFromPoint(dragObj.startX, y);
-        dragObj.clone.style.visibility = 'visible';
-        
-        if (!elemUnder) return;
-        
-        let hoverRow;
-        if (dragObj.type === 'category') hoverRow = elemUnder.closest('.category-tbody');
-        else if (dragObj.type === 'item') hoverRow = elemUnder.closest(`tr[data-sidx="${dragObj.sIdx}"]`);
-        else if (dragObj.type === 'planner-item') {
-            hoverRow = elemUnder.closest('tr');
-            if (hoverRow && (hoverRow.closest('thead') || hoverRow.classList.contains('add-row-btn-tr') || hoverRow.classList.contains('mobile-rb-row'))) {
-                hoverRow = null; 
-            }
-        }
-        else if (dragObj.type === 'checklist-item') hoverRow = elemUnder.closest(`.checklist-item[data-person="${dragObj.prefix}"]`);
-        
-        if (hoverRow && hoverRow !== dragObj.placeholder && hoverRow !== dragObj.targetRow) {
-            let rect = hoverRow.getBoundingClientRect();
-            let isAfter = y > rect.top + rect.height / 2;
-            if (isAfter) hoverRow.parentNode.insertBefore(dragObj.placeholder, hoverRow.nextSibling);
-            else hoverRow.parentNode.insertBefore(dragObj.placeholder, hoverRow);
-        }
-    }
-    
-    function dragEnd(e) {
-        if (!dragObj) return;
-        
-        document.removeEventListener('mousemove', dragMove);
-        document.removeEventListener('touchmove', dragMove);
-        document.removeEventListener('mouseup', dragEnd);
-        document.removeEventListener('touchend', dragEnd);
-        
-        let ph = dragObj.placeholder;
-        
-        if (dragObj.type === 'planner-item') {
-            let prev = ph.previousElementSibling;
-            let targetMonth = null;
-            
-            let temp = prev;
-            while(temp) {
-                if (temp.hasAttribute('data-month-header')) {
-                    targetMonth = temp.getAttribute('data-month-header');
-                    break;
-                }
-                temp = temp.previousElementSibling;
-            }
-            
-            if(!targetMonth) { targetMonth = dragObj.mStr; }
-            
-            let insertIdx = 0;
-            temp = ph.previousElementSibling;
-            while(temp && !temp.hasAttribute('data-month-header')) {
-                if (temp.hasAttribute('data-id') && temp !== dragObj.targetRow) {
-                    insertIdx++;
-                }
-                temp = temp.previousElementSibling;
-            }
-            
-            let itemIndex = state.planner.findIndex(p => p.id === dragObj.id);
-            let item = state.planner.splice(itemIndex, 1)[0];
-            item.month = targetMonth;
-            
-            let absIdx = 0;
-            let foundMonth = false;
-            for(let i=0; i<state.planner.length; i++) {
-                if (state.planner[i].month === targetMonth) {
-                    foundMonth = true;
-                    if (insertIdx === 0) { absIdx = i; break; }
-                    insertIdx--;
-                } else if (foundMonth) {
-                    absIdx = i;
-                    break;
-                }
-                absIdx = i + 1;
-            }
-            
-            state.planner.splice(absIdx, 0, item);
-            saveState(); renderPlanner();
-            
-        } else if (dragObj.type === 'item') {
-            let trs = Array.from(ph.parentNode.children).filter(el => el.hasAttribute('data-iidx') && el !== dragObj.targetRow);
-            let newIndex = trs.indexOf(ph.previousElementSibling) + 1;
-            if(ph.previousElementSibling && !ph.previousElementSibling.hasAttribute('data-iidx')) newIndex = 0; 
-            
-            let oldIdx = parseInt(dragObj.iIdx);
-            let arr = state.budgets[state.currentMonth][dragObj.sIdx].items;
-            newIndex = Math.max(0, Math.min(newIndex, arr.length - 1));
-            arr.splice(newIndex, 0, arr.splice(oldIdx, 1)[0]);
-            saveState(); renderBudget();
-            
-        } else if (dragObj.type === 'category') {
-            let tbodys = Array.from(ph.parentNode.children).filter(el => el.classList.contains('category-tbody') && el !== dragObj.targetRow);
-            let newIndex = tbodys.indexOf(ph.previousElementSibling) + 1;
-            
-            let oldIdx = parseInt(dragObj.sIdx);
-            let arr = state.budgets[state.currentMonth];
-            newIndex = Math.max(0, Math.min(newIndex, arr.length - 1));
-            arr.splice(newIndex, 0, arr.splice(oldIdx, 1)[0]);
-            saveState(); renderBudget();
-        } else if (dragObj.type === 'checklist-item') {
-             let items = Array.from(ph.parentNode.children).filter(el => el.classList.contains('checklist-item') && !el.classList.contains('min-spend-row') && el !== dragObj.targetRow);
-             let newIndex = items.indexOf(ph.previousElementSibling) + 1;
-             
-             let oldIdx = parseInt(dragObj.iIdx);
-             let arr = state.ebucksTemplate[dragObj.prefix];
-             newIndex = Math.max(0, Math.min(newIndex, arr.length - 1));
-             arr.splice(newIndex, 0, arr.splice(oldIdx, 1)[0]);
-             saveState(); renderChecklists();
-        }
-
-        dragObj.placeholder.remove();
-        dragObj.clone.remove();
-        dragObj.targetRow.style.display = '';
-        dragObj = null;
-    }
-
-    init();
-</script>
-<script>
-   if ('serviceWorker' in navigator) {
-       window.addEventListener('load', () => {
-           navigator.serviceWorker.register('./sw.js')
-               .then(reg => console.log('Service Worker registered successfully'))
-               .catch(err => console.log('Service Worker registration failed:', err));
-       });
-   }
-</script>
-</body>
-</html>
