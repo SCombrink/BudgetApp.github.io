@@ -326,7 +326,6 @@
         </div>
         
         <table id="main-budget-table">
-            <thead><tr><th></th><th class="num-col">Budget</th><th class="num-col">Actual</th><th class="num-col">Variance</th></tr></thead>
             <tbody id="budget-body"></tbody>
         </table>
 
@@ -1510,7 +1509,15 @@
             msBar.style.display = 'none';
         }
 
-        let html = ''; 
+        let html = `<thead>
+            <tr>
+                <th></th>
+                <th class="num-col">Budget</th>
+                <th class="num-col">Actual</th>
+                <th class="num-col">Variance</th>
+            </tr>
+        </thead>`; 
+        
         let totalIncomeBudget = 0; let totalExpenseBudget = 0; let totalExpenseActual = 0;
         let ebucksIncomeB = 0; let ebucksExpB = 0;
         let tabIndexCounter = 1;
