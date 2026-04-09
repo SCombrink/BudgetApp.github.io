@@ -2175,51 +2175,6 @@
             </tr>`;
 
             if (!isCollapsed) {
-                
-                html += `<tr class="bg-white">
-                    <td class="planner-drag-mobile-hide"></td>
-                    <td style="color:#6b7280; font-style:italic;">
-                        <span class="long-text">Opening Balance</span>
-                        <span class="short-text">Opening Balance</span>
-                    </td>
-                    <td class="num-col planner-hide-mobile" style="color:#6b7280;"></td>
-                    <td class="num-col planner-hide-mobile" style="color:#6b7280;"></td>
-                    <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
-                    <td class="planner-hide-mobile"></td>
-                    <td class="num-col" style="color:#6b7280;">
-                        <span class="long-text">${formatBalance(balance)}</span>
-                        <span class="short-text">${formatBalance(balance)}</span>
-                    </td>
-                </tr>`;
-
-                balance += margin;
-                html += `<tr class="bg-white">
-                    <td class="planner-drag-mobile-hide"></td>
-                    <td style="color:#6b7280; font-style:italic;">Budget Float (Auto)</td>
-                    <td class="num-col planner-hide-mobile" style="color:#6b7280;">${marginInc === 0 ? '' : formatMoney(marginInc)}</td>
-                    <td class="num-col planner-hide-mobile" style="color:#6b7280;">${marginExp === 0 ? '' : formatMoney(marginExp)}</td>
-                    <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
-                    <td class="planner-hide-mobile"></td>
-                    <td class="num-col" style="color:#6b7280;">
-                        <span class="long-text">${formatBalance(balance)}</span>
-                        <span class="short-text" style="${margin < 0 ? 'color:#dc2626;' : ''}">${margin < 0 ? '-' : ''}${formatMoney(Math.abs(margin))}</span>
-                    </td>
-                </tr>`;
-
-                balance += savings;
-                html += `<tr class="bg-white clickable-row" onclick="openSavingsModal('${mStr}')">
-                    <td class="planner-drag-mobile-hide"></td>
-                    <td style="color:#6b7280; font-style:italic; cursor:pointer;">Savings (Auto) <span style="color:#9ca3af; font-size:0.85rem;">⚙</span></td>
-                    <td class="num-col planner-hide-mobile" style="color:#6b7280;">${savings === 0 ? '' : formatMoney(savings)}</td>
-                    <td class="num-col planner-hide-mobile" style="color:#6b7280;"></td>
-                    <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
-                    <td class="planner-hide-mobile"></td>
-                    <td class="num-col" style="color:#6b7280;">
-                        <span class="long-text">${formatBalance(balance)}</span>
-                        <span class="short-text">${formatMoney(savings)}</span>
-                    </td>
-                </tr>`;
-
                 monthPlannerItems.forEach(p => {
                     let baseBalForEdit = balance;
                     let pNet = p.inc - p.exp;
@@ -2286,6 +2241,34 @@
                     <td class="num-col" style="${balFormat}">
                         <span class="long-text">${formatBalance(balance)}</span>
                         <span class="short-text" style="${discVar < 0 ? 'color:#dc2626;' : 'color:#059669;'}">${discVar < 0 ? '-' : ''}${formatMoney(Math.abs(discVar))}</span>
+                    </td>
+                </tr>`;
+
+                balance += margin;
+                html += `<tr class="bg-white">
+                    <td class="planner-drag-mobile-hide"></td>
+                    <td style="color:#6b7280; font-style:italic;">Budget Float (Auto)</td>
+                    <td class="num-col planner-hide-mobile" style="color:#6b7280;">${marginInc === 0 ? '' : formatMoney(marginInc)}</td>
+                    <td class="num-col planner-hide-mobile" style="color:#6b7280;">${marginExp === 0 ? '' : formatMoney(marginExp)}</td>
+                    <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
+                    <td class="planner-hide-mobile"></td>
+                    <td class="num-col" style="color:#6b7280;">
+                        <span class="long-text">${formatBalance(balance)}</span>
+                        <span class="short-text" style="${margin < 0 ? 'color:#dc2626;' : ''}">${margin < 0 ? '-' : ''}${formatMoney(Math.abs(margin))}</span>
+                    </td>
+                </tr>`;
+
+                balance += savings;
+                html += `<tr class="bg-white clickable-row" onclick="openSavingsModal('${mStr}')">
+                    <td class="planner-drag-mobile-hide"></td>
+                    <td style="color:#6b7280; font-style:italic; cursor:pointer;">Savings (Auto) <span style="color:#9ca3af; font-size:0.85rem;">⚙</span></td>
+                    <td class="num-col planner-hide-mobile" style="color:#6b7280;">${savings === 0 ? '' : formatMoney(savings)}</td>
+                    <td class="num-col planner-hide-mobile" style="color:#6b7280;"></td>
+                    <td class="planner-hide-mobile" style="color:#9ca3af; font-size:0.8rem; font-weight:bold;">AUTO</td>
+                    <td class="planner-hide-mobile"></td>
+                    <td class="num-col" style="color:#6b7280;">
+                        <span class="long-text">${formatBalance(balance)}</span>
+                        <span class="short-text">${formatMoney(savings)}</span>
                     </td>
                 </tr>`;
 
