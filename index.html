@@ -1661,12 +1661,12 @@
                 let variance = (sec.type === 'income' || sec.type === 'gross income') ? item.actual - item.budget : item.budget - item.actual;
                 let varClass = variance > 0 ? 'positive' : (variance < 0 ? 'negative' : '');
                 
-                const budgetColorClass = isExpense ? 'expense-input' : '';
+                const budgetColorClass = ''; // Explicitly requested to be black
                 
                 const disabledAttrBudget = (isLocked || isAutoCalc || itemIsLocked || multiSelectMode) ? 'disabled' : '';
-                const inputClassBudget = (isLocked || isAutoCalc || itemIsLocked || multiSelectMode) ? `locked-input table-input` : `table-input`;
+                const inputClassBudget = (isLocked || isAutoCalc || itemIsLocked || multiSelectMode) ? `locked-input table-input ${budgetColorClass}` : `table-input ${budgetColorClass}`;
                 const disabledAttrActual = (isAutoCalc || itemIsLocked || multiSelectMode) ? 'disabled' : '';
-                const inputClassActual = (isAutoCalc || itemIsLocked || multiSelectMode) ? `locked-input table-input` : `table-input`;
+                const inputClassActual = (isAutoCalc || itemIsLocked || multiSelectMode) ? `locked-input table-input ${budgetColorClass}` : `table-input ${budgetColorClass}`;
                 
                 let rowClickEvent = `onclick="openEditItem('${id}', ${sIdx}, ${iIdx})"`;
                 if (multiSelectMode) { rowClickEvent = `onclick="toggleSelection(event, 'item', '${id}')"`; }
@@ -1758,6 +1758,8 @@
         const isGrossIncome = state.budgets[state.currentMonth][currentEditSIdx].type === 'gross income';
         
         const detailLocked = monthLocked || itemLocked || isGrossIncome;
+        
+        // Actuals override: Can always edit actuals unless it's a gross income auto-calc or specifically item locked
         const actualLocked = itemLocked || isGrossIncome;
         
         document.getElementById('lock-status-text').innerText = itemLocked ? "(Locked)" : "(Unlocked)";
@@ -1931,9 +1933,7 @@
     }
 
     function clearEditActual() {
-        if (state.lockedMonths[state.currentMonth] || (tempEditState && tempEditState.locked) && !isGrossIncome) {
-            // Note: Overridden by the actual inputs bypass.
-        }
+        if (tempEditState && tempEditState.locked && state.lockedMonths[state.currentMonth]) return; // Fully blocked only if both are locked.
         document.getElementById('edit-actual').value = "0";
         handleNumberBlur(document.getElementById('edit-actual'), tempEditState.actual, (val, bd) => { 
             tempEditState.actual = val; 
@@ -1976,7 +1976,7 @@
 
     function renderSubItemsTemp() {
         if (!tempEditState) return;
-        const effectivelyLocked = tempEditState.locked || state.budgets[state.currentMonth][currentEditSIdx].type === 'gross income';
+        const effectivelyLocked = (state.lockedMonths[state.currentMonth] && tempEditState.locked) || state.budgets[state.currentMonth][currentEditSIdx].type === 'gross income';
         let html = ''; let sum = 0; const inputType = 'text';
 
         tempEditState.subItems.forEach((sub, idx) => {
