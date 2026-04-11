@@ -973,14 +973,22 @@
     
     // --- IMPROVED MOBILE PLANNER DRAGGING ---
     function handlePlannerTouchStart(e, id, mStr) {
-        if (e.target.closest('.drag-handle') || e.target.closest('button') || e.target.closest('.short-text[onclick]') || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+        // Ignore inputs, selects, or buttons so they remain clickable
+        if (e.target.closest('button') || e.target.closest('.short-text[onclick]') || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+        
+        // If touched directly on the drag handle (e.g., on an iPad), start instantly
+        if (e.target.closest('.drag-handle')) {
+            isPlannerDragging = true;
+            startCustomDrag(e, 'planner-item', id, null, null, mStr);
+            return;
+        }
         
         plannerTouchStartX = e.touches[0].clientX;
         plannerTouchStartY = e.touches[0].clientY;
 
         plannerDragTimer = setTimeout(() => {
             isPlannerDragging = true;
-            if(navigator.vibrate) navigator.vibrate(50); // Haptic feedback on mobile if supported
+            if(navigator.vibrate) navigator.vibrate(50); // Haptic feedback on mobile
             startCustomDrag(e, 'planner-item', id, null, null, mStr);
         }, 400); 
     }
@@ -990,7 +998,7 @@
         let diffX = Math.abs(e.touches[0].clientX - plannerTouchStartX);
         let diffY = Math.abs(e.touches[0].clientY - plannerTouchStartY);
         
-        // Add a 15px movement tolerance before killing the drag timeout
+        // Tolerance: cancel if finger moves more than 15px before the 400ms is up
         if (diffX > 15 || diffY > 15) {
             clearTimeout(plannerDragTimer);
             plannerDragTimer = null;
@@ -998,8 +1006,11 @@
     }
 
     function handlePlannerTouchEnd() {
-        clearTimeout(plannerDragTimer);
-        plannerDragTimer = null;
+        if (plannerDragTimer) {
+            clearTimeout(plannerDragTimer);
+            plannerDragTimer = null;
+        }
+        // Prevents the "click to edit" menu from opening immediately after you drop the row
         setTimeout(() => { isPlannerDragging = false; }, 100);
     }
     
@@ -2538,8 +2549,8 @@
                         let tagBg = p.type === 'Actual' ? '#e0f2fe' : '#ccfbf1';
                         let shortTag = p.type === 'Actual' ? 'A' : 'P';
                         
-                        html += `<tr class="clickable-row bg-white" onclick="openPlannerEdit('${p.id}', event)" data-id="${p.id}" data-month="${mStr}">
-                            <td style="text-align:center;" class="planner-drag-mobile-hide"><span class="drag-handle" onmousedown="startCustomDrag(event, 'planner-item', '${p.id}', null, null, '${mStr}')" ontouchstart="handlePlannerTouchStart(event, '${p.id}', '${mStr}')" ontouchmove="handlePlannerTouchMove(event)" ontouchend="handlePlannerTouchEnd()">≡</span></td>
+                        html += `<tr class="clickable-row bg-white" onclick="openPlannerEdit('${p.id}', event)" data-id="${p.id}" data-month="${mStr}" ontouchstart="handlePlannerTouchStart(event, '${p.id}', '${mStr}')" ontouchmove="handlePlannerTouchMove(event)" ontouchend="handlePlannerTouchEnd()">
+                            <td style="text-align:center;" class="planner-drag-mobile-hide"><span class="drag-handle" onmousedown="startCustomDrag(event, 'planner-item', '${p.id}', null, null, '${mStr}')">≡</span></td>
                             <td>${dispDesc} <span class="short-text" style="background-color:${tagBg}; color:${tagColor}; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.65rem; margin-left: 5px; cursor: pointer;" onclick="openTypeMenu('${p.id}', event)">${shortTag}</span></td>
                             <td class="num-col planner-hide-mobile">${p.inc === 0 ? '' : formatMoney(p.inc)}</td>
                             <td class="num-col planner-hide-mobile" style="color:#dc2626;">${p.exp === 0 ? '' : formatMoney(p.exp)}</td>
