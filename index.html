@@ -368,8 +368,8 @@
         <div class="panel" style="margin-top: auto; border-bottom: none; border-top: 2px solid #e5e7eb;">
             <div class="panel-title" style="font-size: 0.9rem; color: #6b7280;">Data Management</div>
             <div style="display: flex; gap: 10px;">
-                <button class="secondary" style="flex: 1; font-weight: 600; font-family: inherit; font-size: 0.95rem;" onclick="exportData()">⬇ Export Backup</button>
-                <label class="secondary" style="flex: 1; font-weight: 600; font-family: inherit; font-size: 0.95rem; cursor: pointer; text-align: center; padding: 8px 12px; border-radius: 4px; background: #6b7280; color: white; display: flex; justify-content: center; align-items: center; gap: 6px;">
+                <button class="secondary" style="flex: 1; font-weight: 600; font-family: inherit; font-size: 0.95rem;" onclick="exportData(); hideSidebar();">⬇ Export Backup</button>
+                <label class="secondary" style="flex: 1; font-weight: 600; font-family: inherit; font-size: 0.95rem; cursor: pointer; text-align: center; padding: 8px 12px; border-radius: 4px; background: #6b7280; color: white; display: flex; justify-content: center; align-items: center; gap: 6px;" onclick="hideSidebar();">
                     ⬆ Import Backup
                     <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importData(event)">
                 </label>
